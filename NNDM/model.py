@@ -14,7 +14,7 @@ import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-dynamics_data = np.load(r'Cartpole data.npy')
+dynamics_data = np.load(r'Cartpole_data.npy')
 batch_size = 64
 
 
