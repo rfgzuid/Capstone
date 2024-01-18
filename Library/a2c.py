@@ -16,13 +16,13 @@ class Actor(nn.Module):
         self.observation_size = self.env.observation_space.shape[0]
 
         # output cat[action_means, action_stds]
-        node_counts = [self.observation_size, *hidden_layers, self.action_dim + self.action_dim]
+        node_counts = [self.observation_size, *hidden_layers, self.action_dim]
         self.layers = nn.ParameterList()
 
         for idx in range(len(node_counts) - 1):
             self.layers.append(nn.Linear(node_counts[idx], node_counts[idx + 1]))
 
-        self.activation = F.relu
+        self.activation = F.tanh
 
     def forward(self, x):
         h = x
@@ -34,7 +34,7 @@ class Actor(nn.Module):
 
     def select_action(self, x):
         # return the action mean
-        return self.forward(x)[:, :self.action_dim]
+        return self.forward(x)
 
 
 class Critic(nn.Module):
@@ -51,7 +51,7 @@ class Critic(nn.Module):
         for idx in range(len(node_counts) - 1):
             self.layers.append(nn.Linear(node_counts[idx], node_counts[idx + 1]))
 
-        self.activation = F.relu
+        self.activation = F.tanh
 
     def forward(self, x):
         h = x
