@@ -1,12 +1,11 @@
-from Buffer import ReplayMemory, Transition
-from Architectures import NNDM
-from DQN import DQN
-from a2c import Actor, Critic
+from settings import Env
+from buffer import ReplayMemory, Transition
+from nndm import NNDM
+from dqn import DQN
+from ddpg import Actor, Critic
 
 import torch
-from torchrl.modules import TruncatedNormal
 import matplotlib.pyplot as plt
-import gymnasium as gym
 
 import numpy as np
 
@@ -15,19 +14,26 @@ from tqdm import tqdm
 
 
 class Trainer:
-    def __init__(self, env, nndm: NNDM, policy: DQN|Actor, buffer: ReplayMemory,
-                 settings: dict[str, float], target: Critic|None = None) -> None:
-        self.nndm = nndm
-        self.env = env
+    def __init__(self, env: Env) -> None:
+        self.env = env.env
+        self.is_discrete = env.is_discrete
+        self.settings = env.settings
 
-        self.is_discrete = True if target is None else False
+        self.replay_memory = ReplayMemory(self.settings['replay_size'])
+        self.nndm = NNDM(env)
 
-        self.policy = policy  # is either a DQN network or Actor
-        self.target = deepcopy(policy) if target is None else target  # set target as DQN copy or Critic
+        if self.is_discrete:
+            self.policy = DQN(env)
+            self.target = deepcopy(self.policy)
+        else:
+            self.max_frames = env.settings['max_frames']
+            self.actor = Actor(env)
+            self.actor_target = deepcopy(self.actor)
 
-        self.replay_memory = buffer
-        self.settings = settings
+            self.critic = Critic(env)
+            self.critic_target = deepcopy(self.critic)
 
+        # metrics to track during training
         self.rewards = []
         self.episodes = []
         self.nndm_losses = []
@@ -36,7 +42,7 @@ class Trainer:
         if self.is_discrete:
             return self.ddqn_train()
         else:
-            return self.a2c_train()
+            return self.ddpg_train()
 
     def ddqn_train(self):
         for episode_num in tqdm(range(self.settings['num_episodes'])):
@@ -49,14 +55,14 @@ class Trainer:
 
             while not done:
                 action = self.policy.select_action(state)
-                observation, reward, terminated, truncated, _ = self.env.step(action.detach().squeeze(dim=0).numpy())
+                observation, reward, terminated, truncated, _ = self.env.step(action.item())
                 episode_reward += reward
 
                 reward = torch.tensor([reward], dtype=torch.float32)
                 done = terminated or truncated
 
                 next_state = torch.tensor(observation, dtype=torch.float32).unsqueeze(0)
-                self.replay_memory.push(state, action, next_state, reward, int(not terminated))
+                self.replay_memory.push(state, action, next_state, reward, int(terminated))
 
                 state = next_state
 
@@ -66,20 +72,13 @@ class Trainer:
                     transitions = self.replay_memory.sample(self.settings['batch_size'])
                     batch = Transition(*zip(*transitions))
 
-                loss = self.nndm.train(batch, self.settings['NNDM_optim'], self.settings['NNDM_criterion'])
+                loss = self.nndm.update(batch)
 
                 if loss is not None:
                     nndm_loss.append(loss)
 
-                self.policy.train(batch, self.target, self.settings['DQN_optim'], self.settings['DQN_criterion'])
-
-                target_net_state_dict = self.target.state_dict()
-                policy_net_state_dict = self.policy.state_dict()
-
-                for key in policy_net_state_dict:
-                    target_net_state_dict[key] = policy_net_state_dict[key] * self.settings['tau'] + \
-                                                 target_net_state_dict[key] * (1 - self.settings['tau'])
-                self.target.load_state_dict(target_net_state_dict)
+                self.policy.update(batch, self.target)
+                self.target.soft_update(self.policy)
 
             avg_nndm_loss = sum(nndm_loss)/len(nndm_loss) if len(nndm_loss) != 0 else 0.
 
@@ -90,63 +89,63 @@ class Trainer:
             self.train_plots()
 
         self.train_plots(is_result=True)
-        return self.policy
 
-    def a2c_train(self):
+        return self.policy, self.nndm
+
+    def ddpg_train(self):
         for episode_num in tqdm(range(self.settings['num_episodes'])):
             state, _ = self.env.reset()
             state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
 
             done = False
-            episode_reward = 0.
+            episode_reward = 0.0
+
+            frame = 1
 
             while not done:
-                mean_std = self.policy(state)
-                action_mean, action_std = torch.chunk(mean_std, 2, dim=1)
+                action = self.actor.select_action(state.squeeze())
 
-                distribution = TruncatedNormal(action_mean, action_std)
-                action = distribution.sample()
-
-                next_state, reward, terminated, truncated, _ = self.env.step(action.detach().squeeze(dim=0).numpy())
+                observation, reward, terminated, _, _ = self.env.step(action.detach().numpy())
+                truncated = (frame > self.max_frames)
                 episode_reward += reward
 
+                action = action.clone().detach().unsqueeze(dim=0)
                 reward = torch.tensor([reward], dtype=torch.float32)
                 done = terminated or truncated
 
-                self.settings['Actor_optim'].zero_grad()
-                self.settings['Critic_optim'].zero_grad()
-
-                if not terminated:
-                    td_target = reward + self.settings['a2c_gamma'] * \
-                            self.target(torch.tensor(next_state)).detach()
-                else:
-                    td_target = reward
-
-                delta_t = self.settings['Critic_criterion'](td_target, self.target(torch.tensor(state)).squeeze(dim=0))
-
-                delta_t.backward()
-                self.settings['Critic_optim'].step()
-                self.settings['Critic_optim'].zero_grad()
-
-                delta_t = td_target - self.target(torch.tensor(next_state))
-                loss_actor = -distribution.log_prob(action) * delta_t
-                loss_actor.backward()
-                self.settings['Actor_optim'].step()
-
-                next_state = torch.tensor(next_state, dtype=torch.float32).unsqueeze(0)
-                self.replay_memory.push(state, action, next_state, reward, int(not terminated))
+                next_state = torch.tensor(observation, dtype=torch.float32).unsqueeze(0)
+                self.replay_memory.push(state, action, next_state, reward, int(terminated))
 
                 state = next_state
+
+                if len(self.replay_memory) < self.settings['batch_size']:
+                    batch = None
+                else:
+                    transitions = self.replay_memory.sample(self.settings['batch_size'])
+                    batch = Transition(*zip(*transitions))
+
+                self.critic.update(batch, self.critic_target, self.actor_target)
+                self.actor.update(batch, self.critic)
+
+                self.actor_target.soft_update(self.actor)
+                self.critic_target.soft_update(self.critic)
+
+                frame += 1
+
+            self.train_plots()
 
             self.episodes.append(episode_num)
             self.rewards.append(episode_reward)
 
-            self.train_plots()
-
         self.train_plots(is_result=True)
-        return self.policy
+
+        return self.actor, self.nndm
 
     def train_plots(self, avg_window=10, is_result=False):
+        # TODO: get a NNDM loss subplot that updates with the agent reward plot
+        # maybe just use tensorboard or some advanced tool like that
+        # also a good idea: save the model losses as an attribute in its class
+
         plt.figure(1)
         rewards = torch.tensor(self.rewards, dtype=torch.float)
 
@@ -170,47 +169,3 @@ class Trainer:
 
             plt.plot(self.nndm_losses)
             plt.show()
-
-    def play(self, agent: DQN|Actor, frames: int = 500):
-
-        specs = self.env.spec
-        specs.kwargs['render_mode'] = 'human'
-        play_env = gym.make(specs)
-
-        state, _ = play_env.reset()
-
-        for frame in range(frames):
-            state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
-
-            action = agent.select_action(state)
-            state, reward, terminated, truncated, _ = play_env.step(action.detach().squeeze(dim=0).numpy())
-
-            if truncated or terminated:
-                state, _ = play_env.reset()
-
-        play_env.close()  # close the simulation environment
-
-    def evaluate(self, agent: DQN|Actor, num_agents=100, seed=42):
-        """Do a Monte Carlo simulation of num_agents agents
-         - Returns a list of all the termination frames
-        This allows to numerically estimate the Exit Probability"""
-        termination_frames = []
-
-        for i in range(num_agents):
-            state, _ = self.env.reset(seed=seed)
-
-            current_frame = 0
-            done = False
-
-            while not done:
-                state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
-
-                action = agent.select_action(state)
-                state, reward, terminated, truncated, _ = self.env.step(action.detach().squeeze(dim=0).numpy())
-
-                current_frame += 1
-                done = truncated or terminated
-
-            termination_frames.append(current_frame)
-
-        return termination_frames

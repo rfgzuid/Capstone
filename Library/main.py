@@ -1,48 +1,40 @@
-import gymnasium as gym
-import torch.optim as optim
-import torch.nn as nn
+"""
+Library TODO:
+- Implement DDPG for continuous actions from Wessels bipedal notebook
+- Is GPU necessary? Matej said due to the sequential nature of env simulation (frame by frame)
+  it might not help that much
+  https://spinningup.openai.com/en/latest/algorithms/ddpg.html#deep-deterministic-policy-gradient
+  "The Spinning Up implementation of DDPG does not support parallelization"
+- Convert NNs to nn.Sequential to fit with linear bound propagation library
+- More metric monitoring/plotting in the training pipeline
+- Implement the (S)CBF code for both discrete and continuous action environments
+- Implement the evaluation metrics for CBF in evaluations.py
 
-from Architectures import NNDM
-from DQN import DQN
-from Buffer import ReplayMemory
-from Training import Trainer
-from a2c import Actor, Critic
+- Add docstrings to files, classes & functions, and add extra (line) comments where necessary
+- Add type hints (is it needed? Most variables originate from the env_settings file)
+- Add code sources (for both DDQN and DDPG) + articles on which the code is based
+  These sources are also going to be cited when we have to justify agent architectures (e.g. cartpole & bipedal walker)
+  Also: Frederik gave a lot of RL architecture/training tips that we could briefly mention we used
+- Correctly format the library on github
+(requirements.txt, readme.txt, .gitignore to save files we won't update - like model weights, __init__.py script)
+"""
 
-# env = gym.make("LunarLander-v2", continuous=True)
-# env = gym.make("CartPole-v1")
-env = gym.make("Pendulum-v1")
-is_discrete = isinstance(env.action_space, gym.spaces.discrete.Discrete)
+import torch
 
-buffer = ReplayMemory(10000)
-nndm = NNDM(env, (64,))
+from settings import Cartpole, LunarLander
+from training import Trainer
 
-# hyperparameters settings specified by the user
-settings = {'batch_size': 128,
-            'num_episodes': 200,
-            'tau': 0.005,
-            'a2c_gamma': 0.99,
-            'NNDM_optim': optim.Adam(nndm.parameters(), lr=1e-3),
-            'NNDM_criterion': nn.MSELoss(),
-            }
+# set a seed for reproducibility (does this influence the other files' seed as well?)
+torch.manual_seed(42)
 
-# depending on if the env is discrete, allow the user to specify DDQN or A2C networks
-if is_discrete:
-    policy = DQN(env, (64,), gamma=0.99, eps_start=0.9, eps_end=0.05, eps_decay=1000)
-    target = None
+# env = Cartpole()
+env = LunarLander()
 
-    settings['DQN_optim'] = optim.AdamW(policy.parameters(), lr=1e-3, amsgrad=True)
-    settings['DQN_criterion'] = nn.SmoothL1Loss()
-else:
-    policy = Actor(env, (64, 64))
-    target = Critic(env, (64, 64))
+pipeline = Trainer(env)
+policy, nndm = pipeline.train()
 
-    settings['Actor_optim'] = optim.AdamW(policy.parameters(), lr=1e-3, amsgrad=True)
-    settings['Critic_optim'] = optim.AdamW(target.parameters(), lr=1e-3, amsgrad=True)
-    settings['Critic_criterion'] = nn.MSELoss()
-
-
-pipeline = Trainer(env, nndm, policy, buffer, settings, target=target)
-trained_policy = pipeline.train()
-pipeline.play(trained_policy)
+# torch.save(policy.state_dict(), 'Capstone/');
+# torch.save(nndm.state_dict(), 'Capstone/'))
+# pipeline.play(trained_policy)
 
 # termination_frames = pipeline.evaluate(trained_policy)

@@ -1,47 +1,53 @@
-import gymnasium as gym
-
-from collections.abc import Sequence
-
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+
+from settings import Env
 
 
 class NNDM(nn.Module):
-    """Neural Network Dynamical Model
-    input: tensor of size (M, N_state + N_action) of M samples that each contain a state + action taken
-    output: model tries to predict the following state, output tensor (M, N_state)
+    """
+    Neural Network Dynamical Model
+    - input: tensor of size (M, N_state + N_action): M samples of (s,a) pairs
+    - output: model tries to predict the following state, output tensor (M, N_state)
 
-    The model is predicting the change in state (delta_state) because we found this improves generalization"""
+    The forward pass is used to predict the change in state (delta_state), which is then added to the original state
+    This was found to improve generalization to unseen states
 
-    def __init__(self, env: gym.Env, hidden_layers: Sequence[int], noise=0.01) -> None:
+    Noise is added to the output of the NNDM to simulate a stochastic environment
+    """
+
+    def __init__(self, env: Env) -> None:
         super(NNDM, self).__init__()
 
-        self.env = env
+        self.env = env.env
 
-        self.action_size = 1 if env.action_space.shape == tuple() else env.action_space.shape[0]
-        self.observation_size = env.observation_space.shape[0]
+        self.action_size = 1 if env.is_discrete else self.env.action_space.shape[0]
+        self.observation_size = self.env.observation_space.shape[0]
 
+        hidden_layers = env.settings['NNDM_layers']
         node_counts = [self.observation_size + self.action_size, *hidden_layers, self.observation_size]
+
         self.layers = nn.ParameterList()
+        self.activation = env.settings['NNDM_activation']
 
         for idx in range(len(node_counts) - 1):
             self.layers.append(nn.Linear(node_counts[idx], node_counts[idx+1]))
 
-        self.activation = F.tanh
+        self.criterion = env.settings['NNDM_criterion']()
+        self.optimizer = env.settings['NNDM_optim'](self.parameters(), lr=env.settings['NNDM_lr'])
 
-        self.std = noise
+        self.noise_std = env.settings['NNDM_noise']
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         h = x
-
         for layer in self.layers[:-1]:
             h = self.activation(layer(h))
 
-        return self.layers[-1](h) + x[:, :self.observation_size] + \
-            torch.normal(mean=0., std=self.std, size=(self.observation_size,))
+        noise = torch.normal(mean=0., std=self.noise_std, size=(self.observation_size,))
 
-    def train(self, batch, optimizer, criterion):
+        return self.layers[-1](h) + x[:, :self.observation_size] + noise
+
+    def update(self, batch):
         if batch is None:
             return
 
@@ -51,12 +57,13 @@ class NNDM(nn.Module):
         x_train = torch.cat([state_batch, action_batch], dim=1)
         y_train = torch.cat(batch.next_state)
 
-        optimizer.zero_grad()
+        self.optimizer.zero_grad()
 
         y_pred = self.forward(x_train)
 
-        loss = criterion(y_pred, y_train)
+        loss = self.criterion(y_pred, y_train)
         loss.backward()
-        optimizer.step()
+
+        self.optimizer.step()
 
         return loss.item()
