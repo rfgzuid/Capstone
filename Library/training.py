@@ -7,8 +7,6 @@ from ddpg import Actor, Critic
 import torch
 import matplotlib.pyplot as plt
 
-import numpy as np
-
 from copy import deepcopy
 from tqdm import tqdm
 

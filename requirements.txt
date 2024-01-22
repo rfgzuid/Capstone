@@ -5,8 +5,8 @@ tqdm
 
 --extra-index-url https://download.pytorch.org/whl/cu118
 torch
-torchrl
 gymnasium[classic_control]
+gymnasium[box2d]
 
 bound_propagation
 cvxpy
