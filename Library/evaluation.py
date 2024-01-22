@@ -20,7 +20,7 @@ class Evaluator:
         for frame in range(self.max_frames):
             state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
 
-            action = agent.select_action(state, exploration=False)
+            action = agent.select_action(state, exploration=False).squeeze()
 
             if self.is_discrete:
                 state, reward, terminated, _, _ = play_env.step(action.item())

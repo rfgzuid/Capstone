@@ -19,19 +19,26 @@ from settings import Cartpole, DiscreteLunarLander, ContinuousLunarLander, Biped
 from training import Trainer
 from evaluation import Evaluator
 
-# set a seed for reproducibility (does this influence the other files' seed as well?)
-torch.manual_seed(42)
+from ddpg import Actor
+from dqn import DQN
 
-env = Cartpole()
+train = False
+
+# env = Cartpole()
 # env = DiscreteLunarLander()
-# env = ContinuousLunarLander()
+env = ContinuousLunarLander()
 # env = BipedalWalker()
 
-pipeline = Trainer(env)
-policy, nndm = pipeline.train()
+if train:
+    pipeline = Trainer(env)
+    policy, nndm = pipeline.train()
 
-torch.save(policy.state_dict(), f'Agents/{env.env.spec.id}')
-torch.save(nndm.state_dict(), f'NNDMs/{env.env.spec.id}')
+    torch.save(policy.state_dict(), f'../Agents/{env.env.spec.id}')
+    torch.save(nndm.state_dict(), f'../NNDMs/{env.env.spec.id}')
+else:
+    policy = DQN(env) if env.is_discrete else Actor(env)
+    trained_params = torch.load(f'../Agents/{env.env.spec.id}')
+    policy.load_state_dict(trained_params)
 
 evaluator = Evaluator(env)
 evaluator.play(policy)

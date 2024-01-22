@@ -39,7 +39,6 @@ class NNDM(nn.Sequential):
 
         self.criterion = env.settings['NNDM_criterion']
         self.optimizer = env.settings['NNDM_optim'](self.parameters(), lr=env.settings['NNDM_lr'])
-        self.noise_std = env.settings['NNDM_noise']
 
     def update(self, batch):
         if batch is None:
