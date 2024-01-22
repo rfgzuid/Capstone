@@ -80,7 +80,7 @@ class DiscreteLunarLander(Env):
             'tau': 0.005,
 
             'NNDM_layers': (64,),
-            'NNDM_activation': F.tanh,
+            'NNDM_activation': nn.Tanh,
             'NNDM_criterion': nn.MSELoss,
             'NNDM_optim': optim.Adam,
             'NNDM_lr': 1e-3,
@@ -108,14 +108,14 @@ class ContinuousLunarLander(Env):
         self.settings = {
             'replay_size': 1_000_000,
             'batch_size': 128,
-            'num_episodes': 5,
+            'num_episodes': 200,
             'max_frames': 1000,  # so that the lander prioritizes landing quick
 
             'gamma': 0.99,
             'tau': 0.001,
 
             'NNDM_layers': (64,),
-            'NNDM_activation': F.tanh,
+            'NNDM_activation': nn.Tanh,
             'NNDM_criterion': nn.MSELoss,
             'NNDM_optim': optim.Adam,
             'NNDM_lr': 1e-3,
@@ -156,7 +156,7 @@ class BipedalWalker(Env):
             'tau': 0.001,
 
             'NNDM_layers': (128, 128),
-            'NNDM_activation': F.tanh,
+            'NNDM_activation': nn.Tanh,
             'NNDM_criterion': nn.MSELoss,
             'NNDM_optim': optim.Adam,
             'NNDM_lr': 1e-3,
