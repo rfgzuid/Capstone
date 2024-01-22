@@ -4,7 +4,7 @@ import torch.nn as nn
 from settings import Env
 
 
-class NNDM(nn.Module):
+class NNDM(nn.Sequential):
     """
     Neural Network Dynamical Model
     - input: tensor of size (M, N_state + N_action): M samples of (s,a) pairs
@@ -17,8 +17,6 @@ class NNDM(nn.Module):
     """
 
     def __init__(self, env: Env) -> None:
-        super(NNDM, self).__init__()
-
         self.env = env.env
 
         self.action_size = 1 if env.is_discrete else self.env.action_space.shape[0]
@@ -27,25 +25,21 @@ class NNDM(nn.Module):
         hidden_layers = env.settings['NNDM_layers']
         node_counts = [self.observation_size + self.action_size, *hidden_layers, self.observation_size]
 
-        self.layers = nn.ParameterList()
-        self.activation = env.settings['NNDM_activation']
+        activation = env.settings['NNDM_activation']
+        layers = []
 
         for idx in range(len(node_counts) - 1):
-            self.layers.append(nn.Linear(node_counts[idx], node_counts[idx+1]))
+            layers.append(nn.Linear(node_counts[idx], node_counts[idx+1]))
 
-        self.criterion = env.settings['NNDM_criterion']()
+            # don't add activation after the last linear layer
+            if idx != len(node_counts) - 2:
+                layers.append(activation())
+
+        super(NNDM, self).__init__(*layers)
+
+        self.criterion = env.settings['NNDM_criterion']
         self.optimizer = env.settings['NNDM_optim'](self.parameters(), lr=env.settings['NNDM_lr'])
-
         self.noise_std = env.settings['NNDM_noise']
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        h = x
-        for layer in self.layers[:-1]:
-            h = self.activation(layer(h))
-
-        noise = torch.normal(mean=0., std=self.noise_std, size=(self.observation_size,))
-
-        return self.layers[-1](h) + x[:, :self.observation_size] + noise
 
     def update(self, batch):
         if batch is None:
@@ -59,9 +53,9 @@ class NNDM(nn.Module):
 
         self.optimizer.zero_grad()
 
-        y_pred = self.forward(x_train)
+        y_pred = self(x_train)
 
-        loss = self.criterion(y_pred, y_train)
+        loss = self.criterion()(y_pred, y_train)
         loss.backward()
 
         self.optimizer.step()

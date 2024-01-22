@@ -1,29 +1,34 @@
 import gymnasium as gym
 import torch
 
-from env_settings import Env
+from settings import Env
 
 
 class Evaluator:
     def __init__(self, env: Env) -> None:
         self.env = env.env
+        self.is_discrete = env.is_discrete
+        self.max_frames = env.settings['max_frames']
 
-    def play(self, agent, frames: int = 500):
-
+    def play(self, agent):
         specs = self.env.spec
         specs.kwargs['render_mode'] = 'human'
         play_env = gym.make(specs)
 
         state, _ = play_env.reset()
 
-        for frame in range(frames):
+        for frame in range(self.max_frames):
             state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
 
-            action = agent.select_action(state)
-            state, reward, terminated, truncated, _ = play_env.step(action.detach().squeeze(dim=0).numpy())
+            action = agent.select_action(state, exploration=False)
 
-            if truncated or terminated:
-                state, _ = play_env.reset()
+            if self.is_discrete:
+                state, reward, terminated, _, _ = play_env.step(action.item())
+            else:
+                state, reward, terminated, _, _ = play_env.step(action.detach().numpy())
+
+            if terminated:
+                break
 
         play_env.close()  # close the simulation environment
 

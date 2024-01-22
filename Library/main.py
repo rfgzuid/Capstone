@@ -1,11 +1,5 @@
 """
 Library TODO:
-- Implement DDPG for continuous actions from Wessels bipedal notebook
-- Is GPU necessary? Matej said due to the sequential nature of env simulation (frame by frame)
-  it might not help that much
-  https://spinningup.openai.com/en/latest/algorithms/ddpg.html#deep-deterministic-policy-gradient
-  "The Spinning Up implementation of DDPG does not support parallelization"
-- Convert NNs to nn.Sequential to fit with linear bound propagation library
 - More metric monitoring/plotting in the training pipeline
 - Implement the (S)CBF code for both discrete and continuous action environments
 - Implement the evaluation metrics for CBF in evaluations.py
@@ -21,20 +15,25 @@ Library TODO:
 
 import torch
 
-from settings import Cartpole, LunarLander
+from settings import Cartpole, DiscreteLunarLander, ContinuousLunarLander, BipedalWalker
 from training import Trainer
+from evaluation import Evaluator
 
 # set a seed for reproducibility (does this influence the other files' seed as well?)
 torch.manual_seed(42)
 
-# env = Cartpole()
-env = LunarLander()
+env = Cartpole()
+# env = DiscreteLunarLander()
+# env = ContinuousLunarLander()
+# env = BipedalWalker()
 
 pipeline = Trainer(env)
 policy, nndm = pipeline.train()
 
-# torch.save(policy.state_dict(), 'Capstone/');
-# torch.save(nndm.state_dict(), 'Capstone/'))
-# pipeline.play(trained_policy)
+torch.save(policy.state_dict(), f'Agents/{env.env.spec.id}')
+torch.save(nndm.state_dict(), f'NNDMs/{env.env.spec.id}')
+
+evaluator = Evaluator(env)
+evaluator.play(policy)
 
 # termination_frames = pipeline.evaluate(trained_policy)

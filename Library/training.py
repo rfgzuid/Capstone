@@ -20,13 +20,13 @@ class Trainer:
         self.settings = env.settings
 
         self.replay_memory = ReplayMemory(self.settings['replay_size'])
+        self.max_frames = env.settings['max_frames']
         self.nndm = NNDM(env)
 
         if self.is_discrete:
             self.policy = DQN(env)
             self.target = deepcopy(self.policy)
         else:
-            self.max_frames = env.settings['max_frames']
             self.actor = Actor(env)
             self.actor_target = deepcopy(self.actor)
 
@@ -53,9 +53,12 @@ class Trainer:
             episode_reward = 0.
             nndm_loss = []
 
+            frame = 1
+
             while not done:
                 action = self.policy.select_action(state)
-                observation, reward, terminated, truncated, _ = self.env.step(action.item())
+                observation, reward, terminated, _, _ = self.env.step(action.item())
+                truncated = (frame > self.max_frames)
                 episode_reward += reward
 
                 reward = torch.tensor([reward], dtype=torch.float32)
@@ -80,6 +83,8 @@ class Trainer:
                 self.policy.update(batch, self.target)
                 self.target.soft_update(self.policy)
 
+                frame += 1
+
             avg_nndm_loss = sum(nndm_loss)/len(nndm_loss) if len(nndm_loss) != 0 else 0.
 
             self.episodes.append(episode_num)
@@ -99,6 +104,7 @@ class Trainer:
 
             done = False
             episode_reward = 0.0
+            nndm_loss = []
 
             frame = 1
 
@@ -124,6 +130,11 @@ class Trainer:
                     transitions = self.replay_memory.sample(self.settings['batch_size'])
                     batch = Transition(*zip(*transitions))
 
+                loss = self.nndm.update(batch)
+
+                if loss is not None:
+                    nndm_loss.append(loss)
+
                 self.critic.update(batch, self.critic_target, self.actor_target)
                 self.actor.update(batch, self.critic)
 
@@ -132,10 +143,13 @@ class Trainer:
 
                 frame += 1
 
-            self.train_plots()
+            avg_nndm_loss = sum(nndm_loss) / len(nndm_loss) if len(nndm_loss) != 0 else 0.
 
             self.episodes.append(episode_num)
             self.rewards.append(episode_reward)
+            self.nndm_losses.append(avg_nndm_loss)
+
+            self.train_plots()
 
         self.train_plots(is_result=True)
 
