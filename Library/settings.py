@@ -108,7 +108,7 @@ class ContinuousLunarLander(Env):
         self.settings = {
             'replay_size': 1_000_000,
             'batch_size': 128,
-            'num_episodes': 2,
+            'num_episodes': 200,
             'max_frames': 1000,  # so that the lander prioritizes landing quick
 
             'gamma': 0.99,

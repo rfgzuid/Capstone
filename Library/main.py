@@ -22,7 +22,7 @@ from evaluation import Evaluator
 from ddpg import Actor
 from dqn import DQN
 
-train = False
+train = True
 
 # env = Cartpole()
 # env = DiscreteLunarLander()

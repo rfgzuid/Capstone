@@ -160,6 +160,7 @@ class Trainer:
 
         plt.figure(1)
         rewards = torch.tensor(self.rewards, dtype=torch.float)
+        nndm_losses = torch.tensor(self.nndm_losses, dtype=torch.float)
 
         plt.clf()
         plt.xlabel('Episode')
@@ -169,15 +170,23 @@ class Trainer:
 
         if len(rewards) >= avg_window:
             means = rewards.unfold(0, avg_window, 1).mean(1).view(-1)
-            means = torch.cat((torch.zeros(avg_window-1), means))
+            means = torch.cat((torch.zeros(avg_window - 1), means))
             plt.plot(means.numpy())
 
         if not is_result:
             plt.title('Training...')
             plt.pause(0.001)
         else:
-            plt.title('Result')
-            plt.show()
+            fig, (ax1, ax2) = plt.subplots(1, 2)
+            fig.subplots_adjust(wspace=0.5)
+            fig.suptitle("Result")
+            ax1.set_xlabel('Episode')
+            ax1.set_ylabel('Episodic reward')
+            ax1.plot(rewards)
+            ax1.plot(means.numpy())
 
-            plt.plot(self.nndm_losses)
+            ax2.set_xlabel('Episode')
+            ax2.set_ylabel('NNDM Loss')
+            ax2.plot(nndm_losses)
+
             plt.show()
