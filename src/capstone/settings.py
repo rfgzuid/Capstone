@@ -43,7 +43,7 @@ class Cartpole(Env):
         self.settings = {
             'replay_size': 10_000,
             'batch_size': 128,
-            'num_episodes': 200,
+            'num_episodes': 20,
             'max_frames': 500,
 
             'gamma': 0.99,

@@ -13,12 +13,12 @@ Library TODO:
 
 import torch
 
-from src.capstone.settings import Cartpole, DiscreteLunarLander, ContinuousLunarLander, BipedalWalker
-from src.capstone.training import Trainer
-from src.capstone.evaluation import Evaluator
+from capstone.settings import Cartpole, DiscreteLunarLander, ContinuousLunarLander, BipedalWalker
+from capstone.training import Trainer
+from capstone.evaluation import Evaluator
 
-from src.capstone.dqn import DQN
-from src.capstone.ddpg import Actor
+from capstone.dqn import DQN
+from capstone.ddpg import Actor
 
 train = True
 
@@ -40,6 +40,3 @@ else:
 
 evaluator = Evaluator(env)
 evaluator.play(policy)
-
-termination_frames = evaluator.mc_simulate(policy)
-print(termination_frames)
