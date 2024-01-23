@@ -15,32 +15,33 @@ Library TODO:
 
 import torch
 
-from settings import Cartpole, DiscreteLunarLander, ContinuousLunarLander, BipedalWalker
+from settings import Cartpole
 from training import Trainer
 from evaluation import Evaluator
 
-from ddpg import Actor
+from src.capstone.ddpg import Actor
 from dqn import DQN
 
 train = True
 
-# env = Cartpole()
+env = Cartpole()
 # env = DiscreteLunarLander()
-env = ContinuousLunarLander()
+# env = ContinuousLunarLander()
 # env = BipedalWalker()
 
 if train:
     pipeline = Trainer(env)
     policy, nndm = pipeline.train()
 
-    torch.save(policy.state_dict(), f'../Agents/{env.env.spec.id}')
-    torch.save(nndm.state_dict(), f'../NNDMs/{env.env.spec.id}')
+    torch.save(policy.state_dict(), f'../Agents/{type(env).__name__}')
+    torch.save(nndm.state_dict(), f'../NNDMs/{type(env).__name__}')
 else:
     policy = DQN(env) if env.is_discrete else Actor(env)
-    trained_params = torch.load(f'../Agents/{env.env.spec.id}')
+    trained_params = torch.load(f'../Agents/{type(env).__name__}')
     policy.load_state_dict(trained_params)
 
 evaluator = Evaluator(env)
 evaluator.play(policy)
 
-# termination_frames = pipeline.evaluate(trained_policy)
+# termination_frames = evaluator.mc_simulate(policy)
+# print(termination_frames)
