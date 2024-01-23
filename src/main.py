@@ -9,18 +9,16 @@ Library TODO:
 - Add code sources (for both DDQN and DDPG) + articles on which the code is based
   These sources are also going to be cited when we have to justify agent architectures (e.g. cartpole & bipedal walker)
   Also: Frederik gave a lot of RL architecture/training tips that we could briefly mention we used
-- Correctly format the library on github
-(requirements.txt, readme.txt, .gitignore to save files we won't update - like model weights, __init__.py script)
 """
 
 import torch
 
-from .settings import Cartpole, DiscreteLunarLander, ContinuousLunarLander, BipedalWalker
-from .training import Trainer
-from .evaluation import Evaluator
+from src.capstone.settings import Cartpole, DiscreteLunarLander, ContinuousLunarLander, BipedalWalker
+from src.capstone.training import Trainer
+from src.capstone.evaluation import Evaluator
 
-from .dqn import DQN
-from .ddpg import Actor
+from src.capstone.dqn import DQN
+from src.capstone.ddpg import Actor
 
 train = True
 
