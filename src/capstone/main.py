@@ -43,5 +43,5 @@ else:
 evaluator = Evaluator(env)
 evaluator.play(policy)
 
-# termination_frames = evaluator.mc_simulate(policy)
-# print(termination_frames)
+termination_frames = evaluator.mc_simulate(policy)
+print(termination_frames)
