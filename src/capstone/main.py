@@ -15,12 +15,12 @@ Library TODO:
 
 import torch
 
-from settings import Cartpole
-from training import Trainer
-from evaluation import Evaluator
+from .settings import Cartpole, DiscreteLunarLander, ContinuousLunarLander, BipedalWalker
+from .training import Trainer
+from .evaluation import Evaluator
 
-from src.capstone.ddpg import Actor
-from dqn import DQN
+from .dqn import DQN
+from .ddpg import Actor
 
 train = True
 

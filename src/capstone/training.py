@@ -1,8 +1,8 @@
-from settings import Env
-from src.capstone.buffer import ReplayMemory, Transition
-from src.capstone.nndm import NNDM
-from src.capstone.dqn import DQN
-from src.capstone.ddpg import Actor, Critic
+from .settings import Env
+from .buffer import ReplayMemory, Transition
+from .nndm import NNDM
+from .dqn import DQN
+from .ddpg import Actor, Critic
 
 import torch
 import matplotlib.pyplot as plt

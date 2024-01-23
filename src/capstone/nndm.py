@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from settings import Env
+from .settings import Env
 
 
 class NNDM(nn.Sequential):
