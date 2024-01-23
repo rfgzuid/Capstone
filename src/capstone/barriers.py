@@ -14,14 +14,10 @@ class Gaussian(nn.Module):
         return x + torch.normal(mean=0., std=self.std, size=x.shape)
 
 
-class HHead(nn.Sequential):
-    ...
-
-
 class H(nn.Sequential):
-    def __init__(self, nndm: NNDM):
+    def __init__(self, env: Env, nndm: NNDM):
         super(H, self).__init__(
-            ('nndm', nndm),
-            ('noise', Gaussian(std=0.1)),
-            ('hhead', ...)
+            nndm,
+            Gaussian(std=0.1),
+            env.h_function
         )

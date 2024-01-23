@@ -14,6 +14,10 @@ import torch.nn.functional as F
 from abc import ABC
 from typing import Any
 
+import torch
+from bound_propagation.polynomial import Pow
+from bound_propagation.linear import FixedLinear
+
 
 class Env(ABC):
     """
@@ -26,6 +30,7 @@ class Env(ABC):
     env: gym.Env
     is_discrete: bool
     settings: dict[str | Any]
+    h_function: nn.Sequential
 
 
 class Cartpole(Env):
@@ -61,6 +66,16 @@ class Cartpole(Env):
             'eps_end': 0.05,
             'eps_decay': 1000
         }
+
+        self.h_function = nn.Sequential(
+            Pow(2),
+            FixedLinear(
+                torch.tensor([
+                    [-1 / 2.4 ** 2, 0, 0, 0],
+                    [0, 0, -1 / 0.2095 ** 2, 0]]),
+                torch.tensor([1., 1.])
+            )
+        )
 
 
 class DiscreteLunarLander(Env):
