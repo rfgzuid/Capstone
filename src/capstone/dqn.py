@@ -4,7 +4,7 @@ import torch.nn as nn
 import random
 import math
 
-from settings import Env
+from .settings import Env
 
 
 class DQN(nn.Module):

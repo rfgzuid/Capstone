@@ -5,7 +5,7 @@ Library TODO:
 - Implement the evaluation metrics for CBF in evaluations.py
 
 - Add docstrings to files, classes & functions, and add extra (line) comments where necessary
-- Add type hints (is it needed? Most variables originate from the env_settings file)
+- Add type hints (only where it is really necessary for code understanding)
 - Add code sources (for both DDQN and DDPG) + articles on which the code is based
   These sources are also going to be cited when we have to justify agent architectures (e.g. cartpole & bipedal walker)
   Also: Frederik gave a lot of RL architecture/training tips that we could briefly mention we used
@@ -15,32 +15,33 @@ Library TODO:
 
 import torch
 
-from settings import Cartpole, DiscreteLunarLander, ContinuousLunarLander, BipedalWalker
-from training import Trainer
-from evaluation import Evaluator
+from .settings import Cartpole, DiscreteLunarLander, ContinuousLunarLander, BipedalWalker
+from .training import Trainer
+from .evaluation import Evaluator
 
-from ddpg import Actor
-from dqn import DQN
+from .dqn import DQN
+from .ddpg import Actor
 
 train = True
 
-# env = Cartpole()
+env = Cartpole()
 # env = DiscreteLunarLander()
-env = ContinuousLunarLander()
+# env = ContinuousLunarLander()
 # env = BipedalWalker()
 
 if train:
     pipeline = Trainer(env)
     policy, nndm = pipeline.train()
 
-    torch.save(policy.state_dict(), f'../Agents/{env.env.spec.id}')
-    torch.save(nndm.state_dict(), f'../NNDMs/{env.env.spec.id}')
+    torch.save(policy.state_dict(), f'../Agents/{type(env).__name__}')
+    torch.save(nndm.state_dict(), f'../NNDMs/{type(env).__name__}')
 else:
     policy = DQN(env) if env.is_discrete else Actor(env)
-    trained_params = torch.load(f'../Agents/{env.env.spec.id}')
+    trained_params = torch.load(f'../Agents/{type(env).__name__}')
     policy.load_state_dict(trained_params)
 
 evaluator = Evaluator(env)
 evaluator.play(policy)
 
-# termination_frames = pipeline.evaluate(trained_policy)
+# termination_frames = evaluator.mc_simulate(policy)
+# print(termination_frames)

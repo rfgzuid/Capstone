@@ -1,7 +1,7 @@
 import gymnasium as gym
 import torch
 
-from settings import Env
+from .settings import Env
 
 
 class Evaluator:

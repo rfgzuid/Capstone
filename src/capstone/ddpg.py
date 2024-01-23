@@ -4,7 +4,7 @@ import torch
 
 import numpy as np
 
-from settings import Env
+from .settings import Env
 
 
 def fanin_init(size, eps=None):
