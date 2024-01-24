@@ -319,4 +319,7 @@ pyrightconfig.json
 ### DS store
 .DS_Store
 
+### pycharm unversioned files
+.idea
+
 # End of https://www.toptal.com/developers/gitignore/api/python,pycharm,visualstudiocode,jupyternotebooks
