@@ -1,8 +1,6 @@
 from .settings import Env
 from .nndm import NNDM
 
-from bound_propagation import StandardNormalPDF
-
 import torch.nn as nn
 import torch
 
