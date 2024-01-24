@@ -17,15 +17,20 @@ from capstone.settings import Cartpole, DiscreteLunarLander, ContinuousLunarLand
 from capstone.training import Trainer
 from capstone.evaluation import Evaluator
 
+from capstone.barriers import H
+from capstone.cbf import CBF
+
+from capstone.nndm import NNDM
 from capstone.dqn import DQN
 from capstone.ddpg import Actor
 
-train = True
+train = False
 
 env = Cartpole()
 # env = DiscreteLunarLander()
 # env = ContinuousLunarLander()
 # env = BipedalWalker()
+
 
 if train:
     pipeline = Trainer(env)
@@ -35,8 +40,17 @@ if train:
     torch.save(nndm.state_dict(), f'../NNDMs/{type(env).__name__}')
 else:
     policy = DQN(env) if env.is_discrete else Actor(env)
-    trained_params = torch.load(f'../Agents/{type(env).__name__}')
-    policy.load_state_dict(trained_params)
+    policy_params = torch.load(f'../Agents/{type(env).__name__}')
+    policy.load_state_dict(policy_params)
+
+    nndm = NNDM(env)
+    nndm_params = torch.load(f'../NNDMs/{type(env).__name__}')
+    nndm.load_state_dict(nndm_params)
+
 
 evaluator = Evaluator(env)
+
+h = H(env, nndm)
+cbf = CBF(env, h, policy, alpha=0.2)
+
 evaluator.play(policy)

@@ -15,6 +15,10 @@ class Gaussian(nn.Module):
 
 
 class H(nn.Sequential):
+    """
+    Input: (s, a) pair
+    Output: h vector of the next predicted state s'
+    """
     def __init__(self, env: Env, nndm: NNDM):
         super(H, self).__init__(
             nndm,
