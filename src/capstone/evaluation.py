@@ -17,7 +17,10 @@ class Evaluator:
         specs.additional_wrappers = ()
 
         play_env = gym.make(specs)
-        play_env = BipedalHull(play_env)
+
+        # use custom wrapper
+        if play_env.spec.id == 'BipedalWalker-v3':
+            play_env = BipedalHull(play_env)
 
         state, _ = play_env.reset()
 
