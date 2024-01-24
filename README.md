@@ -25,5 +25,7 @@ Lunar Lander
 Bipedal walker
 - Hull/head height []
 
+We recognize that crafting a concave h function this way is very limited, as state elements are only considered independent of one another. More complex functions could be specified in the settings.py file; for example h constraints that consider a combination of position & velocity.
+
 ## Citations
 citations
