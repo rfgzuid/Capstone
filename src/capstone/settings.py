@@ -15,6 +15,8 @@ from abc import ABC
 from typing import Any
 
 import torch
+
+import math
 from bound_propagation.polynomial import Pow
 from bound_propagation.linear import FixedLinear
 
@@ -72,7 +74,8 @@ class Cartpole(Env):
             FixedLinear(
                 torch.tensor([
                     [-1 / 2.4 ** 2, 0, 0, 0],
-                    [0, 0, -1 / 0.2095 ** 2, 0]]),
+                    [0, 0, -1 / math.radians(12.) ** 2, 0]
+                ]),
                 torch.tensor([1., 1.])
             )
         )
@@ -112,7 +115,16 @@ class DiscreteLunarLander(Env):
             'eps_decay': 1000
         }
 
-        self.h_function = nn.Sequential()
+        self.h_function = nn.Sequential(
+            Pow(2),
+            FixedLinear(
+                torch.tensor([
+                    [-1 / 1. ** 2, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, -1/math.radians(90.), 0, 0, 0]
+                ]),
+                torch.tensor([1., 1.])
+            )
+        )
 
 
 class ContinuousLunarLander(Env):
@@ -155,7 +167,16 @@ class ContinuousLunarLander(Env):
             'OU_sigma': 0.2
         }
 
-        self.h_function = nn.Sequential()
+        self.h_function = nn.Sequential(
+            Pow(2),
+            FixedLinear(
+                torch.tensor([
+                    [-1 / 1. ** 2, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, -1 / math.radians(90.), 0, 0, 0]
+                ]),
+                torch.tensor([1., 1.])
+            )
+        )
 
 
 class BipedalWalker(Env):
