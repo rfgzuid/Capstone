@@ -26,8 +26,8 @@ from capstone.ddpg import Actor
 
 train = False
 
-env = Cartpole()
-# env = DiscreteLunarLander()
+# env = Cartpole()
+env = DiscreteLunarLander()
 # env = ContinuousLunarLander()
 # env = BipedalWalker()
 
@@ -49,7 +49,7 @@ else:
 
     evaluator = Evaluator(env)
 
-    h = H(env, nndm)
+    h = H(env, nndm, noise=0.01)
     cbf = CBF(env, h, policy, alpha=0.9)
 
     evaluator.play(policy, cbf)

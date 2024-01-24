@@ -17,6 +17,8 @@ class InfeasibilityError(Exception):
 class CBF:
     def __init__(self, env: Env, h: H, policy: DQN|Actor, alpha: float):
         self.env = env.env
+        self.state_size = self.env.observation_space.shape[0]
+
         self.is_discrete = env.is_discrete
         self.settings = env.settings
         self.h_func = env.h_function
@@ -39,9 +41,9 @@ class CBF:
         h_cur = self.h_func(state)
 
         for action in action_space:
-            h_input = torch.zeros((1, 5))
-            h_input[:, :4] = state
-            h_input[:, 4] = action
+            h_input = torch.zeros((1, self.state_size + 1))
+            h_input[:, :self.state_size] = state
+            h_input[:, self.state_size] = action
 
             h_next = self.H(h_input).view(1, -1)
 
