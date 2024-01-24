@@ -13,8 +13,7 @@ class Gaussian(nn.Module):
     def forward(self, x):
         return x + torch.normal(mean=0., std=self.std, size=x.shape)
 
-
-class H(nn.Sequential):
+class NNDM_H(nn.Sequential):
     """
     Input: (s, a) pair
     Output: h vector of the next predicted state s'
