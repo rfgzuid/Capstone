@@ -34,7 +34,6 @@ class CBF:
 
         if not self.is_discrete:
             self.action_partitions = self.create_action_partitions(partitions)
-            self.bounded
 
     def safe_action(self, state: torch.tensor):
         if self.is_discrete:
