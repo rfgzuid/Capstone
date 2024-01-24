@@ -15,6 +15,7 @@ from abc import ABC
 from typing import Any
 
 import torch
+import numpy as np
 
 import math
 from bound_propagation.polynomial import Pow
@@ -179,17 +180,42 @@ class ContinuousLunarLander(Env):
         )
 
 
+class BipedalHull(gym.Wrapper):
+    def __init__(self, env):
+        super().__init__(env)
+        # Adjust the shape of the observation space to include the additional state
+        obs_space = env.observation_space
+        low = np.append(obs_space.low.flatten(), -np.inf)
+        high = np.append(obs_space.high.flatten(), np.inf)
+        self.observation_space = gym.spaces.Box(low=low, high=high, dtype=np.float32)
+
+    def step(self, action):
+        state, reward, terminated, truncated, info = self.env.step(action)
+        hull_position = np.array([self.env.unwrapped.hull.position[0]])
+        # Flatten the state and add the x-coordinate of the hull's position
+        extended_state = np.concatenate((state.flatten(), hull_position))
+        return extended_state, reward, terminated, truncated, info
+
+    def reset(self, **kwargs):
+        state = self.env.reset(**kwargs)
+        hull_position = np.array([self.env.unwrapped.hull.position[0]])
+        # Flatten the state and add the x-coordinate of the hull's position
+        extended_state = np.concatenate((state[0].flatten(), hull_position))
+        return extended_state, 'info'
+
+
 class BipedalWalker(Env):
 
     def __init__(self) -> None:
 
-        self.env = gym.make("BipedalWalker-v3")
+        env = gym.make("BipedalWalker-v3")
+        self.env = BipedalHull(env)
         self.is_discrete = False
 
         self.settings = {
             'replay_size': 1_000_000,
             'batch_size': 128,
-            'num_episodes': 100,
+            'num_episodes': 10,
             'max_frames': 1000,
 
             'gamma': 0.99,
@@ -219,4 +245,13 @@ class BipedalWalker(Env):
             'OU_sigma': 0.2
         }
 
-        self.h_function = nn.Sequential()
+        self.h_function = nn.Sequential(
+            Pow(2),
+            FixedLinear(
+                torch.tensor([
+                    [-1 / 1. ** 2, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, -1 / math.radians(90.), 0, 0, 0]
+                ]),
+                torch.tensor([1., 1.])
+            )
+        )
