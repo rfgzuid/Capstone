@@ -45,7 +45,7 @@ class CBF:
             h_input[:, :self.state_size] = state
             h_input[:, self.state_size] = action
 
-            h_next = self.H(h_input).view(1, -1)
+            h_next = self.H(h_input)
 
             if torch.all(h_next >= self.alpha * h_cur).item():
                 safe_actions.append(action)
