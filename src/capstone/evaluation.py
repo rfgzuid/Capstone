@@ -1,7 +1,7 @@
 import gymnasium as gym
 import torch
 
-from .settings import Env
+from .settings import Env, BipedalHull
 from .cbf import CBF
 
 
@@ -14,8 +14,9 @@ class Evaluator:
     def play(self, agent, cbf: CBF):
         specs = self.env.spec
         specs.kwargs['render_mode'] = 'human'
-        play_env = gym.make(specs)
+        print(specs)
 
+        play_env = gym.make(specs)
         state, _ = play_env.reset()
 
         for frame in range(self.max_frames):

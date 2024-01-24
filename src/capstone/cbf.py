@@ -18,7 +18,7 @@ class InfeasibilityError(Exception):
 
 
 class CBF:
-    def __init__(self, env: Env, NNDM_H: NNDM_H, policy: DQN|Actor, alpha: float, partitions: int):
+    def __init__(self, env: Env, NNDM_H: NNDM_H, policy: DQN|Actor, alpha: float, partitions: int=4):
         self.env = env.env
         self.state_size = self.env.observation_space.shape[0]
 
@@ -54,7 +54,7 @@ class CBF:
             h_input[:, :self.state_size] = state
             h_input[:, self.state_size] = action
 
-            h_next = self.H(h_input)
+            h_next = self.NNDM_H(h_input)
 
             if torch.all(h_next >= self.alpha * h_cur).item():
                 safe_actions.append(action)
@@ -74,14 +74,11 @@ class CBF:
             return safe_actions[0].item()
         else:
             raise InfeasibilityError()
-
-
     
     def create_action_partitions(self, partitions):
-        action_space = self.env.action_space
-        num_actions = action_space.shape[0]
-        action_low = action_space.low
-        action_high = action_space.high
+        num_actions = self.env.action_space.shape[0]
+        action_low = self.env.action_space.low
+        action_high = self.env.action_space.high
 
         res = []
 
@@ -112,10 +109,8 @@ class CBF:
             torch.cat((state_partition.lower, action_partition.lower), dim=1),
             torch.cat((state_partition.upper, action_partition.upper), dim=1)
         )
-        crown_bounds = self.env.h.crown(input_bounds, bound_upper=False)
 
-        crown_bounds.lower # (A, b)
-
+        crown_bounds = self.h_func.crown(input_bounds, bound_upper=False)
         return crown_bounds.lower
     
     def create_bound_matrices(self, state):

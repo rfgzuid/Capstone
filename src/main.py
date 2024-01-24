@@ -17,7 +17,7 @@ from capstone.settings import Cartpole, DiscreteLunarLander, ContinuousLunarLand
 from capstone.training import Trainer
 from capstone.evaluation import Evaluator
 
-from capstone.barriers import H
+from capstone.barriers import NNDM_H
 from capstone.cbf import CBF
 
 from capstone.nndm import NNDM
@@ -49,7 +49,7 @@ else:
 
     evaluator = Evaluator(env)
 
-    h = H(env, nndm, noise=0.01)
+    h = NNDM_H(env, nndm, noise=0.01)
     cbf = CBF(env, h, policy, alpha=0.9)
 
     evaluator.play(policy, cbf)
