@@ -22,6 +22,6 @@ class H(nn.Sequential):
     def __init__(self, env: Env, nndm: NNDM):
         super(H, self).__init__(
             nndm,
-            Gaussian(std=0.1),
+            Gaussian(std=0.),
             env.h_function
         )

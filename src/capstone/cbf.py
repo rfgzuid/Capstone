@@ -38,18 +38,33 @@ class CBF:
         nominal_action = self.policy.select_action(state, exploration=False)
         best_action = nominal_action
 
-        res = []
+        h_cur = self.h_func(state)
+
+        safe_actions = []
 
         for action in action_space:
-            h = self.H(torch.cat(state, action.unsqueeze(0))).view(1, -1)
-            h_prev = self.h_func(state)
-            if torch.all(torch.ge(h, self.alpha * h_prev)):
-                res += [(int(action != nominal_action), h, action)]
-        best_action_tuple = min(res, key=lambda x: x[0])
+            h_input = torch.zeros((1, 5))
+            h_input[:, :4] = state
+            h_input[:, 4] = action
 
-        if sum(best_action_tuple[0] == action_tuple[0] for action_tuple in res) > 1:
-            best_action_tuple = min([action_tuple for action_tuple in res if action_tuple[0] == best_action_tuple[0]],
-                                    key=lambda x: x[1])
-        best_action = best_action_tuple[2].view(1, 1)
+            h_next = self.H(h_input).view(1, -1)
 
-        return best_action
+            if torch.all(h_next >= self.alpha * h_cur).item():
+                safe_actions.append(action)
+
+        if safe_actions and len(safe_actions) > 1:
+            q_values = self.policy(state).squeeze()
+            mask = torch.zeros_like(q_values, dtype=torch.bool)
+
+            for action in safe_actions:
+                mask[action] = True
+
+            safe_q_values = q_values.masked_fill(~mask, float('-inf'))
+            best_action_index = torch.argmax(safe_q_values)
+            best_action = action_space[best_action_index]
+
+            return best_action.item()
+        elif safe_actions:
+            return safe_actions[0].item()
+        else:
+            raise InfeasibilityError()

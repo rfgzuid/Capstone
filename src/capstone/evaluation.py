@@ -2,6 +2,7 @@ import gymnasium as gym
 import torch
 
 from .settings import Env
+from .cbf import CBF
 
 
 class Evaluator:
@@ -10,7 +11,7 @@ class Evaluator:
         self.is_discrete = env.is_discrete
         self.max_frames = env.settings['max_frames']
 
-    def play(self, agent):
+    def play(self, agent, cbf: CBF):
         specs = self.env.spec
         specs.kwargs['render_mode'] = 'human'
         play_env = gym.make(specs)
@@ -20,10 +21,10 @@ class Evaluator:
         for frame in range(self.max_frames):
             state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
 
-            action = agent.select_action(state, exploration=False).squeeze()
+            action = cbf.safe_action(state)
 
             if self.is_discrete:
-                state, reward, terminated, _, _ = play_env.step(action.item())
+                state, reward, terminated, _, _ = play_env.step(action)
             else:
                 state, reward, terminated, _, _ = play_env.step(action.detach().numpy())
 
