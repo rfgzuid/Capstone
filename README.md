@@ -12,7 +12,7 @@ Also a Neural Network Dynamical Model (NNDM) is trained parallel to the agents, 
 
 ## h functions
 
-For the environments, concave h functions are used so that we convert the CBF constraint from ED to CED [SCBF SOURCE]. The output of the h functions are vectors; each element in the vector corresponds to a safety-critical state element for which we define bounds. The parabolae defined to have maximum 1, and have their roots at the bounds of unsafety. 
+For the environments, concave h functions are used so that we convert the CBF constraint from ED to CED [SCBF SOURCE]. The output of the h functions are vectors; each element in the vector corresponds to a safety-critical state element for which we define bounds. The parabolas are defined to have maximum 1, and have their roots at the bounds of unsafety. 
 
 Cartpole
 - Angle [-12 deg, 12 deg]
@@ -20,10 +20,12 @@ Cartpole
 
 Lunar Lander
 - Angle []
-- Position []
+- X position []
 
 Bipedal walker
 - Hull/head height []
+
+We recognize that crafting a concave h function this way is very limited, as state elements are only considered independent of one another. More complex functions could be specified in the settings.py file; for example h constraints that consider a combination of position & velocity.
 
 ## Citations
 citations

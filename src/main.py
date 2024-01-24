@@ -26,8 +26,8 @@ from capstone.ddpg import Actor
 
 train = False
 
-env = Cartpole()
-# env = DiscreteLunarLander()
+# env = Cartpole()
+env = DiscreteLunarLander()
 # env = ContinuousLunarLander()
 # env = BipedalWalker()
 
@@ -47,10 +47,9 @@ else:
     nndm_params = torch.load(f'../NNDMs/{type(env).__name__}')
     nndm.load_state_dict(nndm_params)
 
+    evaluator = Evaluator(env)
 
-evaluator = Evaluator(env)
+    h = H(env, nndm, noise=0.01)
+    cbf = CBF(env, h, policy, alpha=0.9)
 
-h = H(env, nndm)
-cbf = CBF(env, h, policy, alpha=0.2)
-
-evaluator.play(policy)
+    evaluator.play(policy, cbf)

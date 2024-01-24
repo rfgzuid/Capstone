@@ -18,9 +18,9 @@ class NNDM_H(nn.Sequential):
     Input: (s, a) pair
     Output: h vector of the next predicted state s'
     """
-    def __init__(self, env: Env, nndm: NNDM):
+    def __init__(self, env: Env, nndm: NNDM, noise=0.):
         super(H, self).__init__(
             nndm,
-            Gaussian(std=0.1),
+            Gaussian(std=0.),
             env.h_function
         )

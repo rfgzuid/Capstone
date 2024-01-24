@@ -20,6 +20,8 @@ class InfeasibilityError(Exception):
 class CBF:
     def __init__(self, env: Env, NNDM_H: NNDM_H, policy: DQN|Actor, alpha: float, partitions: int):
         self.env = env.env
+        self.state_size = self.env.observation_space.shape[0]
+
         self.is_discrete = env.is_discrete
         self.settings = env.settings
         self.h_func = env.h_function
@@ -43,25 +45,37 @@ class CBF:
     def discrete_cbf(self, state):
         # Discrete(n) has actions {0, 1, ..., n-1} - see gymnasium docs
         action_space = torch.arange(self.env.action_space.n)
+        safe_actions = []
 
-        nominal_action = self.policy.select_action(state, exploration=False)
-        best_action = nominal_action
-
-        res = []
+        h_cur = self.h_func(state)
 
         for action in action_space:
-            h = self.H(torch.cat(state, action.unsqueeze(0))).view(1, -1)
-            h_prev = self.h_func(state)
-            if torch.all(torch.ge(h, self.alpha * h_prev)):
-                res += [(int(action != nominal_action), h, action)]
-        best_action_tuple = min(res, key=lambda x: x[0])
+            h_input = torch.zeros((1, self.state_size + 1))
+            h_input[:, :self.state_size] = state
+            h_input[:, self.state_size] = action
 
-        if sum(best_action_tuple[0] == action_tuple[0] for action_tuple in res) > 1:
-            best_action_tuple = min([action_tuple for action_tuple in res if action_tuple[0] == best_action_tuple[0]],
-                                    key=lambda x: x[1])
-        best_action = best_action_tuple[2].view(1, 1)
+            h_next = self.H(h_input)
 
-        return best_action
+            if torch.all(h_next >= self.alpha * h_cur).item():
+                safe_actions.append(action)
+
+        if safe_actions and len(safe_actions) > 1:
+            q_values = self.policy(state).squeeze()
+            mask = torch.zeros_like(q_values, dtype=torch.bool)
+
+            for action in safe_actions:
+                mask[action] = True
+
+            safe_q_values = q_values.masked_fill(~mask, float('-inf'))
+            best_action = torch.argmax(safe_q_values)
+
+            return best_action.item()
+        elif safe_actions:
+            return safe_actions[0].item()
+        else:
+            raise InfeasibilityError()
+
+
     
     def create_action_partitions(self, partitions):
         action_space = self.env.action_space
