@@ -34,13 +34,9 @@ class CBF:
     def discrete_cbf(self, state):
         # Discrete(n) has actions {0, 1, ..., n-1} - see gymnasium docs
         action_space = torch.arange(self.env.action_space.n)
-
-        nominal_action = self.policy.select_action(state, exploration=False)
-        best_action = nominal_action
+        safe_actions = []
 
         h_cur = self.h_func(state)
-
-        safe_actions = []
 
         for action in action_space:
             h_input = torch.zeros((1, 5))
@@ -60,8 +56,7 @@ class CBF:
                 mask[action] = True
 
             safe_q_values = q_values.masked_fill(~mask, float('-inf'))
-            best_action_index = torch.argmax(safe_q_values)
-            best_action = action_space[best_action_index]
+            best_action = torch.argmax(safe_q_values)
 
             return best_action.item()
         elif safe_actions:
