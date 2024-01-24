@@ -136,7 +136,7 @@ class CBF:
         return res
     
     def continuous_cbf(self, state):
-        nominal_action = self.policy(state)
+        nominal_action = self.policy(state).squeeze(0).detach()
         h_current = self.h_func(state)
         bound_matrices = self.create_bound_matrices(state)
         safe_actions = []
@@ -164,8 +164,8 @@ class CBF:
                 safe_actions.append((action.value, objective.value))
 
         if safe_actions and len(safe_actions) > 1:
-            return min(safe_actions, key=lambda x: x[1], default=(None, None))[0]
+            return torch.tensor(min(safe_actions, key=lambda x: x[1], default=(None, None))[0])
         elif safe_actions:
-            return safe_actions[0]
+            return torch.tensor(safe_actions[0])
         else:
             raise InfeasibilityError()

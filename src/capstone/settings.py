@@ -32,7 +32,7 @@ class Env(ABC):
 
     env: gym.Env
     is_discrete: bool
-    settings: dict[str | Any]
+    settings: dict[Any]
     h_function: nn.Sequential
 
 
