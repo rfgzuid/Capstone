@@ -14,9 +14,11 @@ class Evaluator:
     def play(self, agent, cbf: CBF):
         specs = self.env.spec
         specs.kwargs['render_mode'] = 'human'
-        print(specs)
+        specs.additional_wrappers = ()
 
         play_env = gym.make(specs)
+        play_env = BipedalHull(play_env)
+
         state, _ = play_env.reset()
 
         for frame in range(self.max_frames):

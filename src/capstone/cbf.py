@@ -119,7 +119,7 @@ class CBF:
         for action_partition in self.action_partitions:
             print("partition", action_partition.lower.shape)
             print("state", state.shape)
-            (A, b) = self.get_lower_bound(self.bounded_NNDM_H, state, action_partition, 0.01)
+            (A, b) = self.get_lower_bound(state, action_partition)
             h_action_dependent = A[:, :, -action_dimensionality:]
             # State input region is a hyperrectangle with "radius" 0.01
             state_input_bounds = HyperRectangle.from_eps(state, 0.01)

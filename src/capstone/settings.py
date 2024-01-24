@@ -249,9 +249,9 @@ class BipedalWalker(Env):
             Pow(2),
             FixedLinear(
                 torch.tensor([
-                    [-1 / 1. ** 2, 0, 0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, -1 / math.radians(90.), 0, 0, 0]
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1/7.],
                 ]),
-                torch.tensor([1., 1.])
+                torch.tensor([1.])
             )
         )
