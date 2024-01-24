@@ -112,6 +112,8 @@ class DiscreteLunarLander(Env):
             'eps_decay': 1000
         }
 
+        self.h_function = nn.Sequential()
+
 
 class ContinuousLunarLander(Env):
 
@@ -153,6 +155,8 @@ class ContinuousLunarLander(Env):
             'OU_sigma': 0.2
         }
 
+        self.h_function = nn.Sequential()
+
 
 class BipedalWalker(Env):
 
@@ -193,3 +197,5 @@ class BipedalWalker(Env):
             'OU_theta': 0.15,
             'OU_sigma': 0.2
         }
+
+        self.h_function = nn.Sequential()
