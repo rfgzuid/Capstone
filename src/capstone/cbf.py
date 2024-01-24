@@ -109,7 +109,7 @@ class CBF:
             torch.cat((state_partition.upper, action_partition.upper), dim=1)
         )
 
-        crown_bounds = self.h_func.crown(input_bounds, bound_upper=False)
+        crown_bounds = self.bounded_NNDM_H.crown(input_bounds, bound_upper=False)
         return crown_bounds.lower
     
     def create_bound_matrices(self, state):
@@ -117,8 +117,6 @@ class CBF:
         action_dimensionality = action_space.shape[0]
         res = []
         for action_partition in self.action_partitions:
-            print("partition", action_partition.lower.shape)
-            print("state", state.shape)
             (A, b) = self.get_lower_bound(state, action_partition)
             h_action_dependent = A[:, :, -action_dimensionality:]
             # State input region is a hyperrectangle with "radius" 0.01

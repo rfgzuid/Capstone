@@ -250,7 +250,7 @@ class BipedalWalker(Env):
             FixedLinear(
                 torch.tensor([
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1/7.],
+                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1/7.**2],
                 ]),
                 torch.tensor([1.])
             )
