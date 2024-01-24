@@ -1,6 +1,8 @@
 from .settings import Env
 from .nndm import NNDM
 
+from bound_propagation import StandardNormalPDF
+
 import torch.nn as nn
 import torch
 
@@ -21,6 +23,5 @@ class NNDM_H(nn.Sequential):
     def __init__(self, env: Env, nndm: NNDM, noise=0.):
         super(NNDM_H, self).__init__(
             nndm,
-            Gaussian(std=0.),
             env.h_function
         )
