@@ -10,7 +10,7 @@ import cvxpy as cp
 
 
 class InfeasibilityError(Exception):
-    """Exception raised if there are no actions that fulfill the safety criterions."""
+    """Exception raised if there are no actions that fulfill the safety criteria."""
 
     def __init__(self):
         super().__init__()
@@ -18,7 +18,7 @@ class InfeasibilityError(Exception):
 
 
 class CBF:
-    def __init__(self, env: Env, NNDM_H: NNDM_H, policy: DQN|Actor, alpha: float, partitions: int=4):
+    def __init__(self, env: Env, nndm_h: NNDM_H, policy: DQN | Actor, alpha: float, partitions: int = 4):
         self.env = env.env
         self.state_size = self.env.observation_space.shape[0]
 
@@ -26,13 +26,14 @@ class CBF:
         self.settings = env.settings
         self.h_func = env.h_function
 
-        self.NNDM_H = NNDM_H
-        factory = BoundModelFactory()
-        self.bounded_NNDM_H = factory.build(self.NNDM_H)
+        self.NNDM_H = nndm_h
         self.policy = policy
         self.alpha = alpha
 
         if not self.is_discrete:
+            factory = BoundModelFactory()
+            self.bounded_NNDM_H = factory.build(self.NNDM_H)
+
             self.action_partitions = self.create_action_partitions(partitions)
 
     def safe_action(self, state: torch.tensor):
@@ -84,7 +85,8 @@ class CBF:
         def generate_partitions(dimensions, lower, upper, current_partition):
             if dimensions == num_actions:
                 # If we've reached the number of dimensions, add the current partition
-                res.append(HyperRectangle(torch.tensor(lower, dtype=torch.float32).unsqueeze(0), torch.tensor(upper, dtype=torch.float32).unsqueeze(0)))
+                res.append(HyperRectangle(torch.tensor(lower, dtype=torch.float32).unsqueeze(0),
+                                          torch.tensor(upper, dtype=torch.float32).unsqueeze(0)))
             else:
                 # Calculate the size of the partition for the current dimension
                 partition_size = (action_high[dimensions] - action_low[dimensions]) / partitions
@@ -95,7 +97,8 @@ class CBF:
                     dim_upper_bound = dim_lower_bound + partition_size
 
                     # Recursively generate partitions for the next dimension
-                    generate_partitions(dimensions + 1, lower + [dim_lower_bound], upper + [dim_upper_bound], current_partition)
+                    generate_partitions(dimensions + 1, lower + [dim_lower_bound], upper + [dim_upper_bound],
+                                        current_partition)
 
         generate_partitions(0, [], [], [])
 
@@ -122,9 +125,9 @@ class CBF:
             # State input region is a hyperrectangle with "radius" 0.01
             state_input_bounds = HyperRectangle.from_eps(state, 0.01)
             # State dependent part of the A matrix
-            state_A = A[:, :, :-action_dimensionality]
+            state_a = A[:, :, :-action_dimensionality]
             # Make this into a (lower) linear bounds (\underbar{A}_x x + b \leq ...)
-            state_linear_bounds = LinearBounds(state_input_bounds, (state_A, b), None)
+            state_linear_bounds = LinearBounds(state_input_bounds, (state_a, b), None)
             # Convert to lower interval bounds (b \leq ...)
             state_interval_bounds = state_linear_bounds.concretize()
             # Select the lower bound
@@ -145,9 +148,10 @@ class CBF:
             action = cp.Variable(num_actions)
 
             # Constraints
-            action_lower_bound = (action_partition).lower.reshape((-1,))
-            action_upper_bound = (action_partition).upper.reshape((-1,))
-            constraints = [action_lower_bound <= action, action <= action_upper_bound, h_action_dependent @ action + h_vec >= self.alpha * h_current]
+            action_lower_bound = action_partition.lower.reshape((-1,))
+            action_upper_bound = action_partition.upper.reshape((-1,))
+            constraints = [action_lower_bound <= action, action <= action_upper_bound,
+                           h_action_dependent @ action + h_vec >= self.alpha * h_current]
 
             # Objective
             objective = cp.Minimize(cp.norm(action - nominal_action, 2))

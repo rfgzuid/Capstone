@@ -33,7 +33,7 @@ class Trainer:
 
         # metrics to track during training
         self.rewards = []
-        self.episodes = []
+        self.termination_frames = []
         self.nndm_losses = []
 
     def train(self):
@@ -51,12 +51,12 @@ class Trainer:
             episode_reward = 0.
             nndm_loss = []
 
-            frame = 1
+            frame = 0
 
             while not done:
                 action = self.policy.select_action(state)
                 observation, reward, terminated, _, _ = self.env.step(action.item())
-                truncated = (frame > self.max_frames)
+                truncated = (frame == self.max_frames)
                 episode_reward += reward
 
                 reward = torch.tensor([reward], dtype=torch.float32)
@@ -85,8 +85,8 @@ class Trainer:
 
             avg_nndm_loss = sum(nndm_loss)/len(nndm_loss) if len(nndm_loss) != 0 else 0.
 
-            self.episodes.append(episode_num)
             self.rewards.append(episode_reward)
+            self.termination_frames.append(frame)
             self.nndm_losses.append(avg_nndm_loss)
 
             self.train_plots()
@@ -104,13 +104,13 @@ class Trainer:
             episode_reward = 0.0
             nndm_loss = []
 
-            frame = 1
+            frame = 0
 
             while not done:
                 action = self.actor.select_action(state.squeeze())
 
                 observation, reward, terminated, _, _ = self.env.step(action.detach().numpy())
-                truncated = (frame > self.max_frames)
+                truncated = (frame == self.max_frames)
                 episode_reward += reward
 
                 action = action.clone().detach().unsqueeze(dim=0)
@@ -143,8 +143,8 @@ class Trainer:
 
             avg_nndm_loss = sum(nndm_loss) / len(nndm_loss) if len(nndm_loss) != 0 else 0.
 
-            self.episodes.append(episode_num)
             self.rewards.append(episode_reward)
+            self.termination_frames.append(frame)
             self.nndm_losses.append(avg_nndm_loss)
 
             self.train_plots()
@@ -154,39 +154,31 @@ class Trainer:
         return self.actor, self.nndm
 
     def train_plots(self, avg_window=10, is_result=False):
-        # TODO: get a NNDM loss subplot that updates with the agent reward plot
-        # maybe just use tensorboard or some advanced tool like that
-        # also a good idea: save the model losses as an attribute in its class
-
         plt.figure(1)
-        rewards = torch.tensor(self.rewards, dtype=torch.float)
-        nndm_losses = torch.tensor(self.nndm_losses, dtype=torch.float)
 
         plt.clf()
         plt.xlabel('Episode')
         plt.ylabel('Episodic reward')
 
-        plt.plot(rewards)
-
-        if len(rewards) >= avg_window:
-            means = rewards.unfold(0, avg_window, 1).mean(1).view(-1)
-            means = torch.cat((torch.zeros(avg_window - 1), means))
-            plt.plot(means.numpy())
+        plt.plot(self.rewards)
 
         if not is_result:
             plt.title('Training...')
             plt.pause(0.001)
         else:
-            fig, (ax1, ax2) = plt.subplots(1, 2)
+            fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
             fig.subplots_adjust(wspace=0.5)
             fig.suptitle("Result")
             ax1.set_xlabel('Episode')
             ax1.set_ylabel('Episodic reward')
-            ax1.plot(rewards)
-            ax1.plot(means.numpy())
+            ax1.plot(self.rewards)
 
             ax2.set_xlabel('Episode')
             ax2.set_ylabel('NNDM Loss')
-            ax2.plot(nndm_losses)
+            ax2.plot(self.nndm_losses)
+
+            ax3.set_xlabel('Episode')
+            ax3.set_ylabel('End frame')
+            ax3.plot(self.termination_frames)
 
             plt.show()

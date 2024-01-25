@@ -57,7 +57,6 @@ class Cartpole(Env):
             'NNDM_criterion': nn.MSELoss,
             'NNDM_optim': optim.Adam,
             'NNDM_lr': 1e-3,
-            'NNDM_noise': 0.01,
 
             'DQN_layers': (64,),
             'DQN_activation': F.tanh,
@@ -70,12 +69,21 @@ class Cartpole(Env):
             'eps_decay': 1000
         }
 
+        # 1 - x{0}^2 / 2.4^2
+        # 1 - x{4}^2 / rad(12)^2
         self.h_function = nn.Sequential(
+            FixedLinear(
+                torch.tensor([
+                    [1, 0, 0, 0],
+                    [0, 0, 1, 0]
+                ]),
+                torch.tensor([0., 0.])
+            ),
             Pow(2),
             FixedLinear(
                 torch.tensor([
-                    [-1 / 2.4 ** 2, 0, 0, 0],
-                    [0, 0, -1 / math.radians(12.) ** 2, 0]
+                    [-1 / 2.4 ** 2, 0],
+                    [0, -1 / math.radians(12.) ** 2]
                 ]),
                 torch.tensor([1., 1.])
             )
@@ -103,7 +111,6 @@ class DiscreteLunarLander(Env):
             'NNDM_criterion': nn.MSELoss,
             'NNDM_optim': optim.Adam,
             'NNDM_lr': 1e-3,
-            'NNDM_noise': 0.01,
 
             'DQN_layers': (64,),
             'DQN_activation': F.tanh,
@@ -116,12 +123,21 @@ class DiscreteLunarLander(Env):
             'eps_decay': 1000
         }
 
+        # 1 - x{0}^2 / 1^2
+        # 1 - x{4}^2/ rad(90)^2
         self.h_function = nn.Sequential(
+            FixedLinear(
+                torch.tensor([
+                    [1, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 1, 0, 0, 0]
+                ]),
+                torch.tensor([0., 0.])
+            ),
             Pow(2),
             FixedLinear(
                 torch.tensor([
-                    [-1 / 1. ** 2, 0, 0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, -1/math.radians(90.), 0, 0, 0]
+                    [-1 / 1. ** 2, 0],
+                    [0, -1 / math.radians(90.) ** 2]
                 ]),
                 torch.tensor([1., 1.])
             )
@@ -149,7 +165,6 @@ class ContinuousLunarLander(Env):
             'NNDM_criterion': nn.MSELoss,
             'NNDM_optim': optim.Adam,
             'NNDM_lr': 1e-3,
-            'NNDM_noise': 0.01,
 
             'Actor_layers': (256, 128, 64),
             'Actor_activation': F.relu,
@@ -168,40 +183,39 @@ class ContinuousLunarLander(Env):
             'OU_sigma': 0.2
         }
 
+        # 1 - x{0}^2 / 1^2
+        # 1 - x{4}^2 / rad(90)^2
         self.h_function = nn.Sequential(
+            FixedLinear(
+                torch.tensor([
+                    [1, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 1, 0, 0, 0]
+                ]),
+                torch.tensor([0., 0.])
+            ),
             Pow(2),
             FixedLinear(
                 torch.tensor([
-                    [-1 / 1. ** 2, 0, 0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, -1 / math.radians(90.), 0, 0, 0]
+                    [-1 / 1. ** 2, 0],
+                    [0, -1 / math.radians(90.) ** 2]
                 ]),
                 torch.tensor([1., 1.])
             )
         )
 
 
-class BipedalHull(gym.Wrapper):
+class BipedalHull(gym.ObservationWrapper):
     def __init__(self, env):
         super().__init__(env)
-        # Adjust the shape of the observation space to include the additional state
+
         obs_space = env.observation_space
         low = np.append(obs_space.low.flatten(), -np.inf)
         high = np.append(obs_space.high.flatten(), np.inf)
         self.observation_space = gym.spaces.Box(low=low, high=high, dtype=np.float32)
 
-    def step(self, action):
-        state, reward, terminated, truncated, info = self.env.step(action)
-        hull_position = np.array([self.env.unwrapped.hull.position[0]])
-        # Flatten the state and add the x-coordinate of the hull's position
-        extended_state = np.concatenate((state.flatten(), hull_position))
-        return extended_state, reward, terminated, truncated, info
-
-    def reset(self, **kwargs):
-        state = self.env.reset(**kwargs)
-        hull_position = np.array([self.env.unwrapped.hull.position[0]])
-        # Flatten the state and add the x-coordinate of the hull's position
-        extended_state = np.concatenate((state[0].flatten(), hull_position))
-        return extended_state, 'info'
+    def observation(self, observation):
+        hull_pos = np.array([self.env.unwrapped.hull.position[1]])
+        return np.concatenate((observation, hull_pos))
 
 
 class BipedalWalker(Env):
@@ -215,7 +229,7 @@ class BipedalWalker(Env):
         self.settings = {
             'replay_size': 1_000_000,
             'batch_size': 128,
-            'num_episodes': 10,
+            'num_episodes': 1000,
             'max_frames': 1000,
 
             'gamma': 0.99,
@@ -226,7 +240,6 @@ class BipedalWalker(Env):
             'NNDM_criterion': nn.MSELoss,
             'NNDM_optim': optim.Adam,
             'NNDM_lr': 1e-3,
-            'NNDM_noise': 0.01,
 
             'Actor_layers': (256, 128, 64),
             'Actor_activation': F.relu,
@@ -245,13 +258,18 @@ class BipedalWalker(Env):
             'OU_sigma': 0.2
         }
 
+        # 1 - (x{25} - 5.5)^2 / 0.5^2
         self.h_function = nn.Sequential(
-            Pow(2),
             FixedLinear(
                 torch.tensor([
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1/7.**2],
+                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.],
                 ]),
+                torch.tensor([-5.5])
+            ),
+            Pow(2),
+            FixedLinear(
+                torch.tensor([-1/0.5**2]),
                 torch.tensor([1.])
             )
         )
