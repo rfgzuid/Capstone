@@ -12,8 +12,13 @@ class Evaluator:
     def __init__(self, env: Env) -> None:
         self.env = env.env
         self.is_discrete = env.is_discrete
+
         self.max_frames = env.settings['max_frames']
+
         self.h_function = env.h_function
+
+        self.titles = env.h_name
+        self.image = type(env).__name__
 
     def play(self, agent, cbf: CBF = None):
         specs = self.env.spec
@@ -46,7 +51,7 @@ class Evaluator:
 
         play_env.close()  # close the simulation environment
 
-    def mc_simulate(self, agent, num_agents=100, seed=42):
+    def mc_simulate(self, agent, num_agents, seed=42):
         """
         Run a Monte Carlo simulation of [num_agents] agents
          - Returns a list of all the termination/truncation frames
@@ -55,7 +60,6 @@ class Evaluator:
         h_values_all_runs = []
 
         for i in range(num_agents):
-
             h_values = []
             state, _ = self.env.reset(seed=seed)
 
@@ -64,8 +68,12 @@ class Evaluator:
 
             while not done:
                 state = torch.tensor(state).unsqueeze(0)
+
                 h_tensor = self.h_function(state)
                 h_values.append(h_tensor.squeeze().numpy())
+
+                state = state + torch.normal(mean=0., std=0.04, size=state.shape)
+
                 action = agent.select_action(state, exploration=False)
                 state, reward, terminated, truncated, _ = self.env.step(action.item())
 
@@ -77,15 +85,20 @@ class Evaluator:
         return h_values_all_runs
 
     def nice_plots(self, agent, alpha, delta, N, K, M):
-        s_knot, _ = self.env.reset(seed=42)
         all_h_values = self.mc_simulate(agent, N)
 
-        fig, (ax1, ax2) = plt.subplots(2)
+        fig, axs = plt.subplots(all_h_values[0].shape[1])
+        fig.suptitle(f'{self.image},  {N} agents with noisy dynamics')
 
         for run in all_h_values:
-            ax1.plot(run[:, 0])
-            ax2.plot(run[:, 1])
+            for i, h_plot in enumerate(axs):
+                h_plot.plot(run[:, i], 'r', alpha=0.1)
 
+                h_plot.set_xlabel('frame')
+                h_plot.set_ylabel('h value')
+                h_plot.set_title(self.titles[i])
+
+        fig.tight_layout()
         plt.show()
 
         """

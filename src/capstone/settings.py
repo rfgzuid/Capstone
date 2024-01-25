@@ -34,6 +34,7 @@ class Env(ABC):
     is_discrete: bool
     settings: dict[Any]
     h_function: nn.Sequential
+    h_name: list[str]
 
 
 class Cartpole(Env):
@@ -89,6 +90,9 @@ class Cartpole(Env):
             )
         )
 
+        self.h_name = ['X Position [-2.4, 2.4]',
+                       'Angle [-12, 12] deg']
+
 
 class DiscreteLunarLander(Env):
 
@@ -142,6 +146,9 @@ class DiscreteLunarLander(Env):
                 torch.tensor([1., 1.])
             )
         )
+
+        self.h_name = ['X Position [-1, 1]',
+                       'Angle [-90, 90] deg']
 
 
 class ContinuousLunarLander(Env):
@@ -203,6 +210,9 @@ class ContinuousLunarLander(Env):
             )
         )
 
+        self.h_name = ['X Position [-1, 1]',
+                       'Angle [-90, 90] deg']
+
 
 class BipedalHull(gym.ObservationWrapper):
     def __init__(self, env):
@@ -263,13 +273,24 @@ class BipedalWalker(Env):
             FixedLinear(
                 torch.tensor([
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.],
+                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.]
                 ]),
-                torch.tensor([-5.5])
+                torch.tensor([-5.])
             ),
             Pow(2),
             FixedLinear(
-                torch.tensor([-1/0.5**2]),
+                torch.tensor([[-1/0.5**2]]),
                 torch.tensor([1.])
             )
         )
+
+        self.h_name = ['Head height [4.5, 5.5]']
+
+
+class NoiseWrapper(gym.ObservationWrapper):
+    def __init__(self, env, noise: float):
+        super().__init__(env)
+        self.std = noise
+
+    def observation(self, observation):
+        return observation + np.random.normal(0, self.std, observation.shape)
