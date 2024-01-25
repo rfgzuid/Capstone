@@ -52,5 +52,5 @@ else:
     h = NNDM_H(env, nndm)
     cbf = CBF(env, h, policy, alpha=0.9)
 
-    # evaluator.play(policy)
-    evaluator.nice_plots(policy, 0.9, 0, 10, 500, 1)
+    evaluator.play(policy)
+    # evaluator.nice_plots(policy, 0.9, 0, 10, 500, 1)
