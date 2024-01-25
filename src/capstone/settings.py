@@ -57,7 +57,6 @@ class Cartpole(Env):
             'NNDM_criterion': nn.MSELoss,
             'NNDM_optim': optim.Adam,
             'NNDM_lr': 1e-3,
-            'NNDM_noise': 0.01,
 
             'DQN_layers': (64,),
             'DQN_activation': F.tanh,
@@ -103,7 +102,6 @@ class DiscreteLunarLander(Env):
             'NNDM_criterion': nn.MSELoss,
             'NNDM_optim': optim.Adam,
             'NNDM_lr': 1e-3,
-            'NNDM_noise': 0.01,
 
             'DQN_layers': (64,),
             'DQN_activation': F.tanh,
@@ -149,7 +147,6 @@ class ContinuousLunarLander(Env):
             'NNDM_criterion': nn.MSELoss,
             'NNDM_optim': optim.Adam,
             'NNDM_lr': 1e-3,
-            'NNDM_noise': 0.01,
 
             'Actor_layers': (256, 128, 64),
             'Actor_activation': F.relu,
@@ -215,7 +212,7 @@ class BipedalWalker(Env):
         self.settings = {
             'replay_size': 1_000_000,
             'batch_size': 128,
-            'num_episodes': 10,
+            'num_episodes': 1000,
             'max_frames': 1000,
 
             'gamma': 0.99,
@@ -226,7 +223,6 @@ class BipedalWalker(Env):
             'NNDM_criterion': nn.MSELoss,
             'NNDM_optim': optim.Adam,
             'NNDM_lr': 1e-3,
-            'NNDM_noise': 0.01,
 
             'Actor_layers': (256, 128, 64),
             'Actor_activation': F.relu,
