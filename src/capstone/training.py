@@ -1,4 +1,4 @@
-from .settings import Env
+from .settings import Env, NoiseWrapper
 from .buffer import ReplayMemory, Transition
 from .nndm import NNDM
 from .dqn import DQN
@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 class Trainer:
     def __init__(self, env: Env) -> None:
-        self.env = env.env
+        self.env = NoiseWrapper(env.env)
         self.is_discrete = env.is_discrete
         self.settings = env.settings
 
