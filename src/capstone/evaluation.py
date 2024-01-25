@@ -84,38 +84,50 @@ class Evaluator:
 
         return h_values_all_runs
 
-    def nice_plots(self, agent, alpha, delta, N, K, M):
-        all_h_values = self.mc_simulate(agent, N)
+    def nice_plots(self, agent, alpha, delta, N, M, cbf: CBF): # N is the number of experiments
+        s_knot, _ = self.env.reset(seed=42) # this is the initial state
+        end_frames, all_h_values = self.mc_simulate(agent, N, 42, cbf) # what you get from the simulation
 
-        fig, axs = plt.subplots(all_h_values[0].shape[1])
-        fig.suptitle(f'{self.image},  {N} agents with noisy dynamics')
+        dimension_h = self.h_function(torch.tensor(s_knot).unsqueeze(0)).shape[1] # how many h_i do you have
+        fig, axs = plt.subplots(dimension_h, 3) # first col for h, second col for p_ui, third for p_u
 
-        for run in all_h_values:
-            for i, h_plot in enumerate(axs):
-                h_plot.plot(run[:, i], 'r', alpha=0.1)
+        P_u_lst = []
 
-                h_plot.set_xlabel('frame')
-                h_plot.set_ylabel('h value')
-                h_plot.set_title(self.titles[i])
-
-        fig.tight_layout()
-        plt.show()
-
-        """
-            # Pu-t
+        for i in range(dimension_h):
+            x = range(self.max_frames)
+            h_s_knot = self.h_function(torch.tensor(s_knot).unsqueeze(0)) # get the state to tensor
             P_u_i_lst = []
-            for t in range(K):
-                P_u_i_lst.append(1 - (self.h_function(s_knot)[i] / M) * ((M * alpha + delta) / M) ** t)
+            for t in range(self.max_frames):
+                P_u_i_lst.append(1 - (h_s_knot[0][i].item() / M) * ((M * alpha + delta) / M) ** t)
+            P_u_lst.append(P_u_i_lst)
+
+            for run in all_h_values:
+                # h_i_plot
+                axs[i, 0].plot(run[:, i], 'r', alpha=0.1)
+                # p_u_i plot
             axs[i, 1].plot(x, P_u_i_lst)
 
-        # at each timestep T: there is a failure probability P_u = 1 - PI(1-P_u_i)
-        P_u_lst = []
-        for t in range(K):
+        P_u = []
+        for t in range(self.max_frames):
             P_succeed = 1
-            for q in range(len(h_ind)):
-                P_succeed *= 1 - P_u_i_lst[q][t]
-            P_u_lst.append(1 - P_succeed)
+            for q in range(dimension_h):
+                P_succeed *= (1-P_u_lst[q][t])
+            P_u.append(1 - P_succeed)
 
-        # TODO: MC simulation (how many percent of the experiments has failed up to time T)
-        axs[0, 3].plot(x, P_u_lst)
-        """
+        axs[0, 2].plot(range(self.max_frames), P_u)
+
+        end_frames.sort()
+
+        P_u_emp = []
+
+        for t in range(self.max_frames):
+            counter = 0
+            for frame in end_frames:
+                if frame <= t:
+                    counter += 1
+            counter = counter / N
+            P_u_emp.append(counter)
+        axs[0, 2].plot(range(self.max_frames), P_u_emp)
+        axs[1, 2].plot(range(self.max_frames), P_u_emp, color = "orange")
+
+        plt.show()
