@@ -27,12 +27,13 @@ class CBF:
         self.h_func = env.h_function
 
         self.NNDM_H = NNDM_H
-        factory = BoundModelFactory()
-        self.bounded_NNDM_H = factory.build(self.NNDM_H)
         self.policy = policy
         self.alpha = alpha
 
         if not self.is_discrete:
+            factory = BoundModelFactory()
+            self.bounded_NNDM_H = factory.build(self.NNDM_H)
+
             self.action_partitions = self.create_action_partitions(partitions)
 
     def safe_action(self, state: torch.tensor):
