@@ -153,6 +153,9 @@ class Trainer:
             self.nndm_losses.append(avg_nndm_loss)
             self.actor_losses.append(avg_actor_loss)
 
+            if episode_num % 50 == 0 and episode_num != 0:
+                torch.save(self.actor.state_dict(), f'Saved_models/Episode:{episode_num}_reward:{round(episode_reward, 2)}')
+
             self.train_plots()
 
         self.train_plots(is_result=True)
