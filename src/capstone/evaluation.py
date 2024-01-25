@@ -11,7 +11,7 @@ class Evaluator:
         self.is_discrete = env.is_discrete
         self.max_frames = env.settings['max_frames']
 
-    def play(self, agent, cbf: CBF):
+    def play(self, agent, cbf: CBF = None):
         specs = self.env.spec
         specs.kwargs['render_mode'] = 'human'
         specs.additional_wrappers = ()
@@ -27,7 +27,10 @@ class Evaluator:
         for frame in range(self.max_frames):
             state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
 
-            action = cbf.safe_action(state)
+            if cbf is None:
+                action = agent.select_action(state, exploration=False)
+            else:
+                action = cbf.safe_action(state)
 
             if self.is_discrete:
                 state, reward, terminated, _, _ = play_env.step(action)
