@@ -1,4 +1,6 @@
 import gymnasium as gym
+from gymnasium.wrappers import TransformObservation
+
 import torch
 
 from .settings import Env, BipedalHull
@@ -25,11 +27,9 @@ class Evaluator:
         specs.kwargs['render_mode'] = 'human'
         specs.additional_wrappers = ()
 
-        play_env = gym.make(specs)
+        # print(specs)
 
-        # use custom wrapper
-        if play_env.spec.id == 'BipedalWalker-v3':
-            play_env = BipedalHull(play_env)
+        play_env = gym.make(specs)
 
         state, _ = play_env.reset()
 
