@@ -16,7 +16,9 @@ class Evaluator:
         self.max_frames = env.settings['max_frames']
 
         self.h_function = env.h_function
+
         self.titles = env.h_name
+        self.image = type(env).__name__
 
     def play(self, agent, cbf: CBF = None):
         specs = self.env.spec
@@ -86,9 +88,7 @@ class Evaluator:
         all_h_values = self.mc_simulate(agent, N)
 
         fig, axs = plt.subplots(all_h_values[0].shape[1])
-
-        # fig.tight_layout()
-        # fig.suptitle(self.env.spec.id)
+        fig.suptitle(f'{self.image} - {N} agents with noisy dynamics')
 
         for run in all_h_values:
             for i, h_plot in enumerate(axs):

@@ -91,7 +91,7 @@ class Cartpole(Env):
         )
 
         self.h_name = ['X Position [-2.4, 2.4]',
-                       'Angle [-12, 12]']
+                       'Angle [-12, 12] deg']
 
 
 class DiscreteLunarLander(Env):
@@ -148,7 +148,7 @@ class DiscreteLunarLander(Env):
         )
 
         self.h_name = ['X Position [-1, 1]',
-                       'Angle [-90, 90]']
+                       'Angle [-90, 90] deg']
 
 
 class ContinuousLunarLander(Env):
@@ -211,7 +211,7 @@ class ContinuousLunarLander(Env):
         )
 
         self.h_name = ['X Position [-1, 1]',
-                       'Angle [-90, 90]']
+                       'Angle [-90, 90] deg']
 
 
 class BipedalHull(gym.ObservationWrapper):
