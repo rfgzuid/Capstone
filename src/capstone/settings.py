@@ -263,13 +263,14 @@ class BipedalWalker(Env):
             FixedLinear(
                 torch.tensor([
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.],
+                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.]
                 ]),
                 torch.tensor([-5.5])
             ),
             Pow(2),
             FixedLinear(
-                torch.tensor([-1/0.5**2]),
+                torch.tensor([[-1/0.5**2]]),
                 torch.tensor([1.])
             )
         )
+
