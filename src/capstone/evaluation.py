@@ -60,7 +60,6 @@ class Evaluator:
         h_values_all_runs = []
 
         for i in range(num_agents):
-
             h_values = []
             state, _ = self.env.reset(seed=seed)
 
@@ -69,10 +68,11 @@ class Evaluator:
 
             while not done:
                 state = torch.tensor(state).unsqueeze(0)
-                state = state + torch.normal(mean=0., std=0.04, size=state.shape)
 
                 h_tensor = self.h_function(state)
                 h_values.append(h_tensor.squeeze().numpy())
+
+                state = state + torch.normal(mean=0., std=0.04, size=state.shape)
 
                 action = agent.select_action(state, exploration=False)
                 state, reward, terminated, truncated, _ = self.env.step(action.item())
@@ -88,7 +88,7 @@ class Evaluator:
         all_h_values = self.mc_simulate(agent, N)
 
         fig, axs = plt.subplots(all_h_values[0].shape[1])
-        fig.suptitle(f'{self.image} - {N} agents with noisy dynamics')
+        fig.suptitle(f'{self.image},  {N} agents with noisy dynamics')
 
         for run in all_h_values:
             for i, h_plot in enumerate(axs):
