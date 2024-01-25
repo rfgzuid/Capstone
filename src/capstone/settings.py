@@ -287,10 +287,31 @@ class BipedalWalker(Env):
         self.h_name = ['Head height [4.5, 5.5]']
 
 
-class NoiseWrapper(gym.ObservationWrapper):
-    def __init__(self, env, noise: float):
+class NoiseWrapper(gym.Wrapper):
+    def __init__(self, env):
         super().__init__(env)
-        self.std = noise
+        self.env = env
 
-    def observation(self, observation):
-        return observation + np.random.normal(0, self.std, observation.shape)
+    def reset(self, **kwargs):
+        return super().reset(**kwargs)
+
+    def step(self, action):
+        state, reward, terminated, truncated, _ = super().step(action)
+
+        pos = np.array(self.env.unwrapped.lander.position)
+        pos = pos + np.random.normal(0., 0.01, pos.shape)
+        self.env.unwrapped.lander.position = tuple(pos)
+
+        angle = np.array([self.env.unwrapped.lander.angle])
+        angle = angle + np.random.normal(0., 0.01, angle.shape)
+        self.env.unwrapped.lander.angle = angle[0]
+
+        p_vel = np.array(self.env.unwrapped.lander.linearVelocity)
+        p_vel = p_vel + np.random.normal(0., 0.01, p_vel.shape)
+        self.env.unwrapped.lander.linearVelocity = tuple(p_vel)
+
+        a_vel = np.array([self.env.unwrapped.lander.angularVelocity])
+        a_vel = a_vel + np.random.normal(0., 0.01, a_vel.shape)
+        self.env.unwrapped.lander.angularVelocity = a_vel[0]
+
+        return state, reward, terminated, truncated, None
