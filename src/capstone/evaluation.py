@@ -64,8 +64,11 @@ class Evaluator:
 
             while not done:
                 state = torch.tensor(state).unsqueeze(0)
+                state = state + torch.normal(mean=0., std=0.04, size=state.shape)
+
                 h_tensor = self.h_function(state)
                 h_values.append(h_tensor.squeeze().numpy())
+
                 action = agent.select_action(state, exploration=False)
                 state, reward, terminated, truncated, _ = self.env.step(action.item())
 
@@ -83,8 +86,8 @@ class Evaluator:
         fig, (ax1, ax2) = plt.subplots(2)
 
         for run in all_h_values:
-            ax1.plot(run[:, 0])
-            ax2.plot(run[:, 1])
+            ax1.plot(run[:, 0], 'r', alpha=0.1)
+            ax2.plot(run[:, 1], 'r', alpha=0.1)
 
         plt.show()
 

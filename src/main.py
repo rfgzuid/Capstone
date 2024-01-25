@@ -24,12 +24,12 @@ from capstone.nndm import NNDM
 from capstone.dqn import DQN
 from capstone.ddpg import Actor
 
-train = True
+train = False
 
-# env = Cartpole()
+env = Cartpole()
 # env = DiscreteLunarLander()
 # env = ContinuousLunarLander()
-env = BipedalWalker()
+# env = BipedalWalker()
 
 
 if train:
