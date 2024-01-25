@@ -285,3 +285,12 @@ class BipedalWalker(Env):
         )
 
         self.h_name = ['Head height [4.5, 5.5]']
+
+
+class NoiseWrapper(gym.ObservationWrapper):
+    def __init__(self, env, noise: float):
+        super().__init__(env)
+        self.std = noise
+
+    def observation(self, observation):
+        return observation + np.random.normal(0, self.std, observation.shape)
