@@ -74,8 +74,8 @@ class Cartpole(Env):
         self.h_function = nn.Sequential(
             FixedLinear(
                 torch.tensor([
-                    [1, 0, 0, 0],
-                    [0, 0, 1, 0]
+                    [1., 0, 0, 0],
+                    [0, 0, 1., 0]
                 ]),
                 torch.tensor([0., 0.])
             ),
@@ -128,8 +128,8 @@ class DiscreteLunarLander(Env):
         self.h_function = nn.Sequential(
             FixedLinear(
                 torch.tensor([
-                    [1, 0, 0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 1, 0, 0, 0]
+                    [1., 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 1., 0, 0, 0]
                 ]),
                 torch.tensor([0., 0.])
             ),
@@ -188,8 +188,8 @@ class ContinuousLunarLander(Env):
         self.h_function = nn.Sequential(
             FixedLinear(
                 torch.tensor([
-                    [1, 0, 0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 1, 0, 0, 0]
+                    [1., 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 1., 0, 0, 0]
                 ]),
                 torch.tensor([0., 0.])
             ),
