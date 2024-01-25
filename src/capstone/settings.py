@@ -177,28 +177,18 @@ class ContinuousLunarLander(Env):
         )
 
 
-class BipedalHull(gym.Wrapper):
+class BipedalHull(gym.ObservationWrapper):
     def __init__(self, env):
         super().__init__(env)
-        # Adjust the shape of the observation space to include the additional state
+
         obs_space = env.observation_space
         low = np.append(obs_space.low.flatten(), -np.inf)
         high = np.append(obs_space.high.flatten(), np.inf)
         self.observation_space = gym.spaces.Box(low=low, high=high, dtype=np.float32)
 
-    def step(self, action):
-        state, reward, terminated, truncated, info = self.env.step(action)
-        hull_position = np.array([self.env.unwrapped.hull.position[0]])
-        # Flatten the state and add the x-coordinate of the hull's position
-        extended_state = np.concatenate((state.flatten(), hull_position))
-        return extended_state, reward, terminated, truncated, info
-
-    def reset(self, **kwargs):
-        state = self.env.reset(**kwargs)
-        hull_position = np.array([self.env.unwrapped.hull.position[0]])
-        # Flatten the state and add the x-coordinate of the hull's position
-        extended_state = np.concatenate((state[0].flatten(), hull_position))
-        return extended_state, 'info'
+    def observation(self, observation):
+        hull_pos = np.array([self.env.unwrapped.hull.position[1]])
+        return np.concatenate((observation, hull_pos))
 
 
 class BipedalWalker(Env):
