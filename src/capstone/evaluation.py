@@ -35,7 +35,7 @@ class Evaluator:
             if self.is_discrete:
                 state, reward, terminated, _, _ = play_env.step(action)
             else:
-                state, reward, terminated, _, _ = play_env.step(action.detach().numpy())
+                state, reward, terminated, _, _ = play_env.step(action.squeeze().detach().numpy())
 
             if terminated:
                 break

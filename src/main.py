@@ -52,4 +52,4 @@ else:
     h = NNDM_H(env, nndm, noise=0.01)
     cbf = CBF(env, h, policy, alpha=0.9)
 
-    evaluator.play(policy, cbf)
+    evaluator.play(policy)
