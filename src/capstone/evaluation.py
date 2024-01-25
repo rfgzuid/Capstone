@@ -51,13 +51,14 @@ class Evaluator:
 
         play_env.close()  # close the simulation environment
 
-    def mc_simulate(self, agent, num_agents, seed=42):
+    def mc_simulate(self, agent, num_agents, seed=42, cbf: CBF = None):
         """
         Run a Monte Carlo simulation of [num_agents] agents
          - Returns a list of all the termination/truncation frames
         This allows to numerically estimate the Exit Probability
         """
         h_values_all_runs = []
+        end_frames = []
 
         for i in range(num_agents):
             h_values = []
@@ -74,15 +75,25 @@ class Evaluator:
 
                 state = state + torch.normal(mean=0., std=0.04, size=state.shape)
 
-                action = agent.select_action(state, exploration=False)
-                state, reward, terminated, truncated, _ = self.env.step(action.item())
+                if cbf is None:
+                    action = agent.select_action(state, exploration=False)
+                    state, reward, terminated, truncated, _ = self.env.step(action.item())
+                else:
+                    try:
+                        action = cbf.safe_action(state)
+                    except Exception as e:
+                        break
+                    else:
+                        state, reward, terminated, truncated, _ = self.env.step(action)
 
                 current_frame += 1
                 done = truncated or terminated
 
+            end_frames.append(current_frame)
+
             h_values_all_runs.append(np.array(h_values))
 
-        return h_values_all_runs
+        return end_frames, h_values_all_runs
 
     def nice_plots(self, agent, alpha, delta, N, M, cbf: CBF): # N is the number of experiments
         s_knot, _ = self.env.reset(seed=42) # this is the initial state
