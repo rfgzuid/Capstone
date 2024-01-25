@@ -34,6 +34,7 @@ class Env(ABC):
     is_discrete: bool
     settings: dict[Any]
     h_function: nn.Sequential
+    h_name: list[str]
 
 
 class Cartpole(Env):

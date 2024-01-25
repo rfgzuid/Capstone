@@ -12,8 +12,11 @@ class Evaluator:
     def __init__(self, env: Env) -> None:
         self.env = env.env
         self.is_discrete = env.is_discrete
+
         self.max_frames = env.settings['max_frames']
+
         self.h_function = env.h_function
+        self.titles = env.h_name
 
     def play(self, agent, cbf: CBF = None):
         specs = self.env.spec
@@ -80,15 +83,22 @@ class Evaluator:
         return h_values_all_runs
 
     def nice_plots(self, agent, alpha, delta, N, K, M):
-        s_knot, _ = self.env.reset(seed=42)
         all_h_values = self.mc_simulate(agent, N)
 
-        fig, (ax1, ax2) = plt.subplots(2)
+        fig, axs = plt.subplots(all_h_values[0].shape[1])
+
+        # fig.tight_layout()
+        # fig.suptitle(self.env.spec.id)
 
         for run in all_h_values:
-            ax1.plot(run[:, 0], 'r', alpha=0.1)
-            ax2.plot(run[:, 1], 'r', alpha=0.1)
+            for i, h_plot in enumerate(axs):
+                h_plot.plot(run[:, i], 'r', alpha=0.1)
 
+                h_plot.set_xlabel('frame')
+                h_plot.set_ylabel('h value')
+                h_plot.set_title(self.titles[i])
+
+        fig.tight_layout()
         plt.show()
 
         """
