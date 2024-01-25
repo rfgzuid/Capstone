@@ -46,7 +46,7 @@ class Evaluator:
 
         play_env.close()  # close the simulation environment
 
-    def mc_simulate(self, agent, num_agents=100, seed=42):
+    def mc_simulate(self, agent, num_agents, seed=42):
         """
         Run a Monte Carlo simulation of [num_agents] agents
          - Returns a list of all the termination/truncation frames

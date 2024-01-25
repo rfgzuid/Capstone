@@ -89,6 +89,9 @@ class Cartpole(Env):
             )
         )
 
+        self.h_name = ['X Position [-2.4, 2.4]',
+                       'Angle [-12, 12]']
+
 
 class DiscreteLunarLander(Env):
 
@@ -142,6 +145,9 @@ class DiscreteLunarLander(Env):
                 torch.tensor([1., 1.])
             )
         )
+
+        self.h_name = ['X Position [-1, 1]',
+                       'Angle [-90, 90]']
 
 
 class ContinuousLunarLander(Env):
@@ -202,6 +208,9 @@ class ContinuousLunarLander(Env):
                 torch.tensor([1., 1.])
             )
         )
+
+        self.h_name = ['X Position [-1, 1]',
+                       'Angle [-90, 90]']
 
 
 class BipedalHull(gym.ObservationWrapper):
@@ -265,7 +274,7 @@ class BipedalWalker(Env):
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.]
                 ]),
-                torch.tensor([-5.5])
+                torch.tensor([-5.])
             ),
             Pow(2),
             FixedLinear(
@@ -274,3 +283,4 @@ class BipedalWalker(Env):
             )
         )
 
+        self.h_name = ['Head height [4.5, 5.5]']
