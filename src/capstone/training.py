@@ -35,6 +35,7 @@ class Trainer:
         self.rewards = []
         self.termination_frames = []
         self.nndm_losses = []
+        self.actor_losses = []
 
     def train(self):
         if self.is_discrete:
@@ -73,10 +74,10 @@ class Trainer:
                     transitions = self.replay_memory.sample(self.settings['batch_size'])
                     batch = Transition(*zip(*transitions))
 
-                loss = self.nndm.update(batch)
+                loss_nndm = self.nndm.update(batch)
 
-                if loss is not None:
-                    nndm_loss.append(loss)
+                if loss_nndm is not None:
+                    nndm_loss.append(loss_nndm)
 
                 self.policy.update(batch, self.target)
                 self.target.soft_update(self.policy)
@@ -103,6 +104,7 @@ class Trainer:
             done = False
             episode_reward = 0.0
             nndm_loss = []
+            actor_loss = []
 
             frame = 0
 
@@ -128,10 +130,13 @@ class Trainer:
                     transitions = self.replay_memory.sample(self.settings['batch_size'])
                     batch = Transition(*zip(*transitions))
 
-                loss = self.nndm.update(batch)
+                loss_nndm = self.nndm.update(batch)
+                loss_actor = self.actor.update(batch, self.critic)
 
-                if loss is not None:
-                    nndm_loss.append(loss)
+                if loss_nndm is not None:
+                    nndm_loss.append(loss_nndm)
+                if loss_actor is not None:
+                    actor_loss.append(loss_actor)
 
                 self.critic.update(batch, self.critic_target, self.actor_target)
                 self.actor.update(batch, self.critic)
@@ -140,12 +145,13 @@ class Trainer:
                 self.critic_target.soft_update(self.critic)
 
                 frame += 1
-
             avg_nndm_loss = sum(nndm_loss) / len(nndm_loss) if len(nndm_loss) != 0 else 0.
+            avg_actor_loss = sum(actor_loss)/len(actor_loss) if len(actor_loss) != 0 else 0.
 
             self.rewards.append(episode_reward)
             self.termination_frames.append(frame)
             self.nndm_losses.append(avg_nndm_loss)
+            self.actor_losses.append(avg_actor_loss)
 
             self.train_plots()
 
@@ -158,16 +164,18 @@ class Trainer:
 
         plt.clf()
         plt.xlabel('Episode')
-        plt.ylabel('Episodic reward')
+        plt.ylabel('Episodic reward/loss')
 
-        plt.plot(self.rewards)
+        plt.plot(self.rewards, "-b")
+        plt.plot(self.actor_losses, "-r")
 
+        plt.legend(["Reward", "Loss"], loc = "upper right")
         if not is_result:
             plt.title('Training...')
             plt.pause(0.001)
         else:
-            fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
-            fig.subplots_adjust(wspace=0.5)
+            fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4)
+            fig.subplots_adjust(wspace=1)
             fig.suptitle("Result")
             ax1.set_xlabel('Episode')
             ax1.set_ylabel('Episodic reward')
@@ -180,5 +188,9 @@ class Trainer:
             ax3.set_xlabel('Episode')
             ax3.set_ylabel('End frame')
             ax3.plot(self.termination_frames)
+
+            ax4.set_xlabel('Episode')
+            ax4.set_ylabel('Actor loss')
+            ax4.plot(self.actor_losses)
 
             plt.show()

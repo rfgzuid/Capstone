@@ -92,13 +92,14 @@ class Actor(nn.Module):
         action_values = self.forward(state_batch)
         q_values = critic(state_batch, action_values)
 
-        loss = -torch.sum(q_values)
+        loss = -torch.sum(q_values)/len(q_values)
 
         self.optimizer.zero_grad()
         loss.backward()
 
         nn.utils.clip_grad_value_(self.parameters(), 100)
         self.optimizer.step()
+        return loss.item()
 
     def soft_update(self, source: 'Actor') -> None:
         for target_param, param in zip(self.parameters(), source.parameters()):
