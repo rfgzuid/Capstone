@@ -69,12 +69,21 @@ class Cartpole(Env):
             'eps_decay': 1000
         }
 
+        # 1 - x{0}^2 / 2.4^2
+        # 1 - x{4}^2 / rad(12)^2
         self.h_function = nn.Sequential(
+            FixedLinear(
+                torch.tensor([
+                    [1, 0, 0, 0],
+                    [0, 0, 1, 0]
+                ]),
+                torch.tensor([0., 0.])
+            ),
             Pow(2),
             FixedLinear(
                 torch.tensor([
-                    [-1 / 2.4 ** 2, 0, 0, 0],
-                    [0, 0, -1 / math.radians(12.) ** 2, 0]
+                    [-1 / 2.4 ** 2, 0],
+                    [0, -1 / math.radians(12.) ** 2]
                 ]),
                 torch.tensor([1., 1.])
             )
@@ -114,12 +123,21 @@ class DiscreteLunarLander(Env):
             'eps_decay': 1000
         }
 
+        # 1 - x{0}^2 / 1^2
+        # 1 - x{4}^2/ rad(90)^2
         self.h_function = nn.Sequential(
+            FixedLinear(
+                torch.tensor([
+                    [1, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 1, 0, 0, 0]
+                ]),
+                torch.tensor([0., 0.])
+            ),
             Pow(2),
             FixedLinear(
                 torch.tensor([
-                    [-1 / 1. ** 2, 0, 0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, -1/math.radians(90.), 0, 0, 0]
+                    [-1 / 1. ** 2, 0],
+                    [0, -1 / math.radians(90.) ** 2]
                 ]),
                 torch.tensor([1., 1.])
             )
@@ -165,12 +183,21 @@ class ContinuousLunarLander(Env):
             'OU_sigma': 0.2
         }
 
+        # 1 - x{0}^2 / 1^2
+        # 1 - x{4}^2 / rad(90)^2
         self.h_function = nn.Sequential(
+            FixedLinear(
+                torch.tensor([
+                    [1, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 1, 0, 0, 0]
+                ]),
+                torch.tensor([0., 0.])
+            ),
             Pow(2),
             FixedLinear(
                 torch.tensor([
-                    [-1 / 1. ** 2, 0, 0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, -1 / math.radians(90.), 0, 0, 0]
+                    [-1 / 1. ** 2, 0],
+                    [0, -1 / math.radians(90.) ** 2]
                 ]),
                 torch.tensor([1., 1.])
             )
@@ -231,13 +258,18 @@ class BipedalWalker(Env):
             'OU_sigma': 0.2
         }
 
+        # 1 - (x{25} - 5.5)^2 / 0.5^2
         self.h_function = nn.Sequential(
-            Pow(2),
             FixedLinear(
                 torch.tensor([
                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1/7.**2],
+                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.],
                 ]),
+                torch.tensor([-5.5])
+            ),
+            Pow(2),
+            FixedLinear(
+                torch.tensor([-1/0.5**2]),
                 torch.tensor([1.])
             )
         )
