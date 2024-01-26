@@ -28,9 +28,9 @@ import gymnasium as gym
 
 train = False
 
-env = Cartpole(noise=True)
-# env = DiscreteLunarLander(noise=True)
-# env = ContinuousLunarLander(noise=True)
+env = Cartpole()
+# env = DiscreteLunarLander()
+# env = ContinuousLunarLander()
 
 
 if train:

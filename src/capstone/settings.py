@@ -41,9 +41,8 @@ class Env(ABC):
 
 class Cartpole(Env):
 
-    def __init__(self, noise=False) -> None:
-
-        self.env = gym.make("CartPole-v1")
+    def __init__(self) -> None:
+        env = gym.make("CartPole-v1")
         self.is_discrete = True
 
         self.settings = {
@@ -102,15 +101,13 @@ class Cartpole(Env):
         self.h_name = ['X Position [-2.4, 2.4]',
                        'Angle [-12, 12] deg']
 
-        if noise:
-            self.env = CartPoleNoise(self.env, self.settings['noise'])
+        self.env = CartPoleNoise(self.env, self.settings['noise'])
 
 
 class DiscreteLunarLander(Env):
 
-    def __init__(self, noise=False) -> None:
-
-        self.env = gym.make("LunarLander-v2")
+    def __init__(self) -> None:
+        env = gym.make("LunarLander-v2")
         self.is_discrete = True
 
         self.settings = {
@@ -171,14 +168,13 @@ class DiscreteLunarLander(Env):
         self.h_name = ['X Position [-1, 1]',
                        'Angle [-90, 90] deg']
 
-        if noise:
-            self.env = LunarLanderNoise(self.env, self.settings['noise'])
+        self.env = LunarLanderNoise(self.env, self.settings['noise'])
 
 
 class ContinuousLunarLander(Env):
 
-    def __init__(self, noise=False) -> None:
-        self.env = gym.make("LunarLander-v2", continuous=True)
+    def __init__(self) -> None:
+        env = gym.make("LunarLander-v2", continuous=True)
         self.is_discrete = False
 
         self.settings = {
@@ -245,5 +241,4 @@ class ContinuousLunarLander(Env):
         self.h_name = ['X Position [-1, 1]',
                        'Angle [-90, 90] deg']
 
-        if noise:
-            self.env = LunarLanderNoise(self.env, self.settings['noise'])
+        self.env = LunarLanderNoise(self.env, self.settings['noise'])
