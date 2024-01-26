@@ -24,11 +24,12 @@ from capstone.nndm import NNDM
 from capstone.dqn import DQN
 from capstone.ddpg import Actor
 
-train = True
+train = False
+
 
 # env = Cartpole()
 # env = DiscreteLunarLander()
-env = ContinuousLunarLander()
+env = ContinuousLunarLander(noise=True)
 
 if train:
     pipeline = Trainer(env)

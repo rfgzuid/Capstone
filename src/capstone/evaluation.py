@@ -1,9 +1,8 @@
 import gymnasium as gym
-from gymnasium.wrappers import TransformObservation
 
 import torch
 
-from .settings import Env, BipedalHull
+from .settings import Env, NoisyLanderWrapper
 from .cbf import CBF
 
 import matplotlib.pyplot as plt
@@ -23,11 +22,11 @@ class Evaluator:
         self.image = type(env).__name__
 
     def play(self, agent, cbf: CBF = None):
-        specs = self.env.spec
+        specs = self.env.spec.additional_wrappers
         specs.kwargs['render_mode'] = 'human'
-        specs.additional_wrappers = ()
+        # specs.additional_wrappers = ()
 
-        # print(specs)
+        print(specs)
 
         play_env = gym.make(specs)
 

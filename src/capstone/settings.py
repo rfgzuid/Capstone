@@ -13,6 +13,7 @@ import torch.nn.functional as F
 
 from abc import ABC
 from typing import Any
+from collections.abc import Iterable
 
 import torch
 import numpy as np
@@ -153,12 +154,21 @@ class DiscreteLunarLander(Env):
 
 class ContinuousLunarLander(Env):
 
-    def __init__(self) -> None:
+    def __init__(self, noise=False) -> None:
 
-        self.env = gym.make("LunarLander-v2", continuous=True)
+        env = gym.make("LunarLander-v2", continuous=True)
         self.is_discrete = False
 
         self.settings = {
+            'noise': {
+                'x': 10,
+                'y': 10,
+                'theta': 0.01,
+                'v_x': 0.1,
+                'v_y': 0.1,
+                'v_theta': 0.1
+            },
+
             'replay_size': 1_000_000,
             'batch_size': 128,
             'num_episodes': 200,
@@ -213,105 +223,38 @@ class ContinuousLunarLander(Env):
         self.h_name = ['X Position [-1, 1]',
                        'Angle [-90, 90] deg']
 
+        if noise:
+            self.env = NoisyLanderWrapper(env, self.settings['noise'])
+            print(self.env.spec)
+        else:
+            self.env = env
 
-class BipedalHull(gym.ObservationWrapper):
-    def __init__(self, env):
+
+class NoisyLanderWrapper(gym.Wrapper):
+    def __init__(self, env, noise: dict[str, float]):
         super().__init__(env)
-
-        obs_space = env.observation_space
-        low = np.append(obs_space.low.flatten(), -np.inf)
-        high = np.append(obs_space.high.flatten(), np.inf)
-        self.observation_space = gym.spaces.Box(low=low, high=high, dtype=np.float32)
-
-    def observation(self, observation):
-        hull_pos = np.array([self.env.unwrapped.hull.position[1]])
-        return np.concatenate((observation, hull_pos))
-
-
-class BipedalWalker(Env):
-
-    def __init__(self) -> None:
-
-        env = gym.make("BipedalWalker-v3")
-        self.env = BipedalHull(env)
-        self.is_discrete = False
-
-        self.settings = {
-            'replay_size': 1_000_000,
-            'batch_size': 128,
-            'num_episodes': 1000,
-            'max_frames': 1000,
-
-            'gamma': 0.99,
-            'tau': 0.001,
-
-            'NNDM_layers': (128, 128),
-            'NNDM_activation': nn.Tanh,
-            'NNDM_criterion': nn.MSELoss,
-            'NNDM_optim': optim.Adam,
-            'NNDM_lr': 1e-3,
-
-            'Actor_layers': (256, 128, 64),
-            'Actor_activation': F.relu,
-            'Actor_optim': optim.Adam,
-            'Actor_lr': 1e-4,
-            'Action_bound': 1.,
-
-            'Critic_layers': {'s': (256, 128), 'a': (128,), 'concat': (128,)},
-            'Critic_activation': F.relu,
-            'Critic_criterion': nn.SmoothL1Loss,
-            'Critic_optim': optim.Adam,
-            'Critic_lr': 1e-3,
-
-            'OU_mu': 0,
-            'OU_theta': 0.15,
-            'OU_sigma': 0.2
-        }
-
-        # 1 - (x{25} - 5.5)^2 / 0.5^2
-        self.h_function = nn.Sequential(
-            FixedLinear(
-                torch.tensor([
-                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.]
-                ]),
-                torch.tensor([-5.])
-            ),
-            Pow(2),
-            FixedLinear(
-                torch.tensor([[-1/0.5**2]]),
-                torch.tensor([1.])
-            )
-        )
-
-        self.h_name = ['Head height [4.5, 5.5]']
-
-
-class NoiseWrapper(gym.Wrapper):
-    def __init__(self, env):
-        super().__init__(env)
-        self.env = env
-
-    def reset(self, **kwargs):
-        return super().reset(**kwargs)
+        self.noise = noise
 
     def step(self, action):
-        state, reward, terminated, truncated, _ = super().step(action)
+        print('a')
+        state, reward, terminated, truncated, _ = self.env.step(action)
 
         pos = np.array(self.env.unwrapped.lander.position)
-        pos = pos + np.random.normal(0., 0.01, pos.shape)
+        pos[0] = pos[0] + np.random.normal(0., self.noise['x'])
+        pos[1] = pos[1] + np.random.normal(0., self.noise['y'])
         self.env.unwrapped.lander.position = tuple(pos)
 
         angle = np.array([self.env.unwrapped.lander.angle])
-        angle = angle + np.random.normal(0., 0.01, angle.shape)
+        angle = angle + np.random.normal(0., self.noise['theta'])
         self.env.unwrapped.lander.angle = angle[0]
 
-        p_vel = np.array(self.env.unwrapped.lander.linearVelocity)
-        p_vel = p_vel + np.random.normal(0., 0.01, p_vel.shape)
-        self.env.unwrapped.lander.linearVelocity = tuple(p_vel)
+        pos_vel = np.array(self.env.unwrapped.lander.linearVelocity)
+        pos_vel[0] = pos_vel[0] + np.random.normal(0., self.noise['v_x'])
+        pos_vel[1] = pos_vel[1] + np.random.normal(0., self.noise['v_y'])
+        self.env.unwrapped.lander.linearVelocity = tuple(pos_vel)
 
-        a_vel = np.array([self.env.unwrapped.lander.angularVelocity])
-        a_vel = a_vel + np.random.normal(0., 0.01, a_vel.shape)
-        self.env.unwrapped.lander.angularVelocity = a_vel[0]
+        ang_vel = np.array([self.env.unwrapped.lander.angularVelocity])
+        ang_vel = ang_vel + np.random.normal(0., self.noise['v_theta'])
+        self.env.unwrapped.lander.angularVelocity = ang_vel[0]
 
         return state, reward, terminated, truncated, None
