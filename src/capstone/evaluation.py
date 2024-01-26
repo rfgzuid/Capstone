@@ -16,11 +16,7 @@ class Evaluator:
         self.is_discrete = env.is_discrete
 
         self.max_frames = env.settings['max_frames']
-        self.stochastic = False
-
-        if self.env.spec.additional_wrappers != tuple():
-            self.noise = env.settings['noise']
-            self.stochastic = True
+        self.noise = env.settings['noise']
 
         self.h_function = env.h_function
 
@@ -34,9 +30,9 @@ class Evaluator:
 
         play_env = gym.make(specs)
 
-        if self.stochastic and self.env.spec.id == 'LunarLander-v2':
+        if self.env.spec.id == 'LunarLander-v2':
             play_env = LunarLanderNoise(play_env, self.noise)
-        elif self.stochastic and self.env.spec.id == 'CartPole-v1':
+        elif self.env.spec.id == 'CartPole-v1':
             play_env = CartPoleNoise(play_env, self.noise)
 
         state, _ = play_env.reset()
@@ -80,8 +76,6 @@ class Evaluator:
 
                 h_tensor = self.h_function(state)
                 h_values.append(h_tensor.squeeze().numpy())
-
-                state = state + torch.normal(mean=0., std=0.04, size=state.shape)
 
                 if cbf is None:
                     action = agent.select_action(state, exploration=False)
