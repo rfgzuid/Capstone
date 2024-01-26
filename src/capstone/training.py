@@ -171,28 +171,35 @@ class Trainer:
 
         plt.plot(self.rewards, "-b")
 
-        plt.legend(["Reward"], loc = "lower right")
         if not is_result:
             plt.title('Training...')
             plt.pause(0.001)
         else:
-            fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4)
-            fig.subplots_adjust(wspace=1)
-            fig.suptitle("Result")
-            ax1.set_xlabel('Episode')
-            ax1.set_ylabel('Episodic reward')
-            ax1.plot(self.rewards)
-
-            ax2.set_xlabel('Episode')
-            ax2.set_ylabel('NNDM Loss')
-            ax2.plot(self.nndm_losses)
-
-            ax3.set_xlabel('Episode')
-            ax3.set_ylabel('End frame')
-            ax3.plot(self.termination_frames)
-
-            ax4.set_xlabel('Episode')
-            ax4.set_ylabel('Actor loss')
-            ax4.plot(self.actor_losses)
-
+            plt.xlabel('Episode')
+            plt.ylabel('Episodic reward')
+            plt.title(f"{self.env} Reward")
+            plt.plot(self.rewards)
+            plt.savefig(f"Plots_final_models/{self.env}_Reward")
             plt.show()
+
+            plt.xlabel('Episode')
+            plt.ylabel('NNDM Loss')
+            plt.plot(self.nndm_losses)
+            plt.title(f"{self.env} NNDM Loss")
+            plt.savefig(f"Plots_final_models/{self.env}_NNDM_loss")
+            plt.show()
+
+            plt.xlabel('Episode')
+            plt.ylabel('End frame')
+            plt.plot(self.termination_frames)
+            plt.title(f"{self.env} End frame")
+            plt.savefig(f"Plots_final_models/{self.env}_EndFrame")
+            plt.show()
+
+            plt.xlabel('Episode')
+            plt.ylabel('Actor loss')
+            plt.plot(self.actor_losses)
+            plt.title(f"{self.env} Actor Loss")
+            plt.savefig(f"Plots_final_models/{self.env}actor_loss")
+            plt.show()
+        

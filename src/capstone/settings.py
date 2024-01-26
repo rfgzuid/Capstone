@@ -105,7 +105,7 @@ class DiscreteLunarLander(Env):
         self.settings = {
             'replay_size': 10_000,
             'batch_size': 128,
-            'num_episodes': 200,
+            'num_episodes': 1000,
             'max_frames': 1000,
 
             'gamma': 0.99,
@@ -170,7 +170,7 @@ class ContinuousLunarLander(Env):
 
             'replay_size': 1_000_000,
             'batch_size': 128,
-            'num_episodes': 2000,
+            'num_episodes': 3000,
             'max_frames': 1000,  # so that the lander prioritizes landing quick
 
             'gamma': 0.99,
@@ -253,3 +253,9 @@ class NoisyLanderWrapper(gym.Wrapper):
         self.env.unwrapped.lander.angularVelocity = ang_vel[0]
 
         return state, reward, terminated, truncated, None
+
+    def __str__(self):
+        if self.env.spec.__dict__["kwargs"]["continuous"]:
+            return "Lunar Lander Continuous"
+        else:
+            return "Lunar Lander Discrete"
