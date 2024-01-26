@@ -26,26 +26,26 @@ In the ddpg.py and the ddqn.py files, the neural network architectures and updat
 
 
 ## MOSCOW requirements
-1.Must show understanding of RL by implementing model-based RL for a safety critical system.
-    
-    - Must show understanding of RL by implementing model free RL for a safety critical 
-    system.
-    
-    - Used scripts: main.py, ddpg.py, ddqn.py, settings.py, noise.py
+We managed to implement all the MoSCoW requirements. The deliverables for each requirement can be found in the following files:
 
-2.Should evaluate the method on 1 standard reinforcement learning benchmark (cartpole).
-    
-    - Should evaluate discrete CBF on 1 standard reinforcement learning benchmark (cartpole).
-    
-    - Used scripts: main.py, ddqn.py, settings.py, noise.py, evaluation.py, nndm.py, 
-
-3.Could evaluate the method on 2 more advanced reinforcement learning benchmarks (lunar lander and bipedal walker).
-    
-    - Could evaluate discrete CBF on 1 advanced reinforcement learning benchmark (lunar lander discrete)
-    
-    - Could evaluate continuous CBF and SCBF on 1 advanced reinforcement learning benchmark (lunar lander continuous with added stochasticity)
-    
-    - Used scripts:
+1. Must show understanding of RL by implementing model free RL for a safety critical system.
+    - Used scripts: ddpg.py, ddqn.py, settings.py, training.py
+2. Should implement and train a Neural Network Dynamical Model for model identification.
+    - Used scripts: main.py, nndm.py, buffer.py, training.py
+3. Should implement Stochastic Control Barrier Functions (SCBF) to ensure safe reinforcement learning. 
+    - Used scripts: barriers.py, settings.py, cbf.py, noise.py
+4. Should/could evaluate the effectiveness of the RL system (with CBFs) by counting the number of safety violations and plotting the reward over episodes. 
+    - Used scripts: evaluation.py
+    1. Should choose an appropriate evaluation metric. 
+        - Used scripts: evaluation.py
+    2. Should evaluate discrete CBF on 1 standard reinforcement learning benchmark (cartpole).
+        - Used scripts: barriers.py, cbf.py, ddqn.py, settings.py, evaluation.py, nndm.py
+    3. Could evaluate discrete CBF on 1 advanced reinforcement learning benchmark (lunar lander discrete)
+        - Used scripts: barriers.py, cbf.py, ddqn.py, settings.py, evaluation.py, nndm.py
+    4. Could evaluate continuous CBF and SCBF on 1 advanced reinforcement learning benchmark (lunar lander continuous with added stochasticity)
+        - Used scripts: barriers.py, cbf.py, noise.py, probaility.py, ddpg.py, settings.py, evaluation.py, nndm.py
+7. Could write a one pager that extends the theory of SCBF to NNDMs via linear bound propagation. 
+    - Used scripts: onepager.tex
 
 ## (Stochastic) control barrier functions
 
