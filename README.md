@@ -9,7 +9,7 @@ The library support training of DDQN (discrete actions) and DDPG (continuous act
 
 Also a Neural Network Dynamical Model (NNDM) is trained parallel to the agents, using the same Replay Memory. Both the NNDM and Agent parameters for each environment are saved in the 'Models' folder. These can directly be loaded and evaluated using the library.
 
-## Project discription
+## Project description
 In this project we implemented both discrete and continuous Control Barrier Functions (CBFs) on top of a Reinforcement learning agent in order to have some theoretical probability of being unsafe (P_u) in a certain time window of length K. The model is trained, and evaluated and plots of this theoretical and empirical probability are plotted.
 
 ## Installation
@@ -86,7 +86,7 @@ else:
 
     evaluator.play(policy)
 
-    # Evaluation metrics plot to show - 10 agents are simualted for 500 frames
+    # Evaluation metrics plot to show - 10 agents are simulated for 500 frames
     if with_CBF:
         evaluator.plot(policy, 0.9, 0, N, 500, cbf=cbf)
     else:
