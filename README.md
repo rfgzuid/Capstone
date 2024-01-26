@@ -134,12 +134,12 @@ Lunar Lander
 We recognize that crafting a concave h function this way is very limited, as state elements are only considered independent of one another. More complex functions could be specified in the settings.py file; for example h constraints that consider a combination of position & velocity.
 
 ## References
-- [SCBF SOURCE[, (https://arxiv.org/abs/2302.07469)
+- [SCBF SOURCE], (https://arxiv.org/abs/2302.07469)
 - [DDPG SOURCE], (https://github.com/vy007vikas/PyTorch-ActorCriticRL)
 - [DDQN SOURCE], (https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html)
 - [BOUNDPROPAGATION SOURCE], (https://github.com/Zinoex/bound_propagation/blob/main/README.md)
 
-
+[SCBF SOURCE]: https://arxiv.org/abs/2302.07469
 [DDPG SOURCE]: https://github.com/vy007vikas/PyTorch-ActorCriticRL
 [DDQN SOURCE]: https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
 [BOUNDPROPAGATION SOURCE]: https://github.com/Zinoex/bound_propagation/blob/main/README.md
