@@ -15,7 +15,6 @@ from abc import ABC
 from typing import Any
 
 import torch
-import numpy as np
 
 import math
 from .noise import CartPoleNoise, LunarLanderNoise
