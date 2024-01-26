@@ -30,6 +30,9 @@ In the barriers.py file, the h functions are setup, these functions are used for
 
 In the cbf.py file, the CBFs(control barrier functions) are setup.
 
+In the noise.py file, the noise functions are setup and custom wrappers for the environments are setup. We do this to make the environment stochastic in order to use the SCBFs.
+
+
 
 ## Example
 Below is a short example of how to use the library to setup and train the cartpole environment:
