@@ -25,6 +25,7 @@ In the ddpg.py and the ddqn.py files, the neural network architectures and updat
 ## Example
 Below is a short example of how to use the library to setup the cartpole environment:
 
+```python
 # Import the packages and modules created in source files
 import torch
 
