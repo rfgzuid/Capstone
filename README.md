@@ -60,9 +60,6 @@ train = True
 # Initialize the process with CBFs
 with_CBF = True
 
-# Number of repeated experiments for Monte Carlo Simulation
-N = 10
-
 # Create the environment of Cartpole
 env = Cartpole()
 
@@ -89,11 +86,11 @@ else:
 
     evaluator.play(policy)
 
-    # Evaluation metrics plot to show
+    # Evaluation metrics plot to show - 10 agents are simualted for 500 frames
     if with_CBF:
-        evaluator.plot(policy, 0.9, 0, N, 500, cbf)
+        evaluator.plot(policy, 0.9, 0, N, 500, cbf=cbf)
     else:
-        evaluator.plot(policy, 0.9, 0, N, 500, None)
+        evaluator.plot(policy, 0.9, 0, N, 500)
 ```
 
 ## MOSCOW requirements
