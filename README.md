@@ -69,7 +69,9 @@ We recognize that crafting a concave h function this way is very limited, as sta
 ## References
 - [DDPG SOURCE], (https://github.com/vy007vikas/PyTorch-ActorCriticRL)
 - [DDQN SOURCE], (https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html)
+- [BOUNDPROPAGATION SOURCE], (https://github.com/Zinoex/bound_propagation/blob/main/README.md)
 
 
 [DDPG SOURCE]: https://github.com/vy007vikas/PyTorch-ActorCriticRL
 [DDQN SOURCE]: https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
+[BOUNDPROPAGATION SOURCE]: https://github.com/Zinoex/bound_propagation/blob/main/README.md
