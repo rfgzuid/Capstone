@@ -2,7 +2,7 @@ from .settings import Env
 from .dqn import DQN
 from .ddpg import Actor
 from .barriers import NNDM_H, stochastic_NNDM_H
-from .probability import log_prob, truncated_normal_expectation
+from .probability import HR_probability, log_prob, truncated_normal_expectation, weighted_noise_prob
 
 from bound_propagation import BoundModelFactory, HyperRectangle
 from bound_propagation.bounds import LinearBounds
@@ -10,7 +10,6 @@ import torch
 import cvxpy as cp
 from collections.abc import Iterable
 from itertools import product
-import numpy as np
 import math
 
 
@@ -158,6 +157,15 @@ class CBF:
         nominal_action = self.policy(state).squeeze(0).detach()
         h_current = self.h_func(state)
         bound_matrices = self.create_bound_matrices(state)
+        return self.QP_solver(nominal_action, bound_matrices, h_current)
+    
+    def continuous_scbf(self, state):
+        nominal_action = self.policy(state).squeeze(0).detach()
+        h_current = self.h_func(state)
+        bound_matrices = self.create_noise_bounds(state)
+        return self.QP_solver(nominal_action, bound_matrices, h_current)
+
+    def QP_solver(self, nominal_action, bound_matrices, h_current):
         safe_actions = []
         for action_partition, h_action_dependent, h_vec in bound_matrices:
             num_actions = nominal_action.shape[0]
@@ -215,26 +223,6 @@ class CBF:
             hyperrectangles.append(HyperRectangle(lower_bounds, upper_bounds))
 
         return hyperrectangles
-    
-
-    def weighted_noise_prob(self, HR):
-        res = torch.tensor(len(self.h_ids))
-        HR_prob = self.HR_probability(HR)
-        for i in range(len(self.h_ids)):
-            res[i] = HR_prob * truncated_normal_expectation(0, self.stds[i], HR.lower[i], HR.upper[i])
-        return res
-
-    def HR_probability(self, HR):
-        lower_list = []
-        upper_list = []
-        len_vector = len(self.h_ids)
-        for i in range(len_vector):
-            lower_list += [HR.lower[i]/self.stds[i]]
-            upper_list += [HR.upper[i]/self.stds[i]]
-        prob = 0
-        for j in range(len_vector):
-            prob += (log_prob(upper_list[j], lower_list[j]))
-        return np.exp(prob)
 
     def create_noise_bounds(self, state):
         action_dimensionality = self.env.action_space[0]
@@ -266,7 +254,7 @@ class CBF:
                 noise_A = A[:, :, w_inds]
 
                 # compute the probability of the the noise falling in the given partition of the noise space
-                noise_prob = self.HR_probability(noise_partition)
+                noise_prob = HR_probability(noise_partition, self.h_ids, self.stds)
                 noise_prob = noise_prob.item()
 
                 # Scale state_A and b corresponding to noise_prob
@@ -279,11 +267,9 @@ class CBF:
                 h_vec_state = state_interval_bounds.lower.detach()
 
                 # compute \int_{HR_{wi}} w \, p(w) \, dw
-                # TODO: implement log exp trick
-                std = 1 # TODO: This should be changed to use self.stds in the weighted noise_prob
-                weighted_noise_prob = 1/(math.sqrt(2*math.pi) * std) * (torch.exp(torch.square(noise_partition.upper / std)/-2) - torch.exp(torch.square(noise_partition.lower / std)/-2))
+                weighted_noise_proba = weighted_noise_prob(noise_partition, self.h_ids, self.stds)
                 # The part of the bound on h that is dependend on the noise
-                h_vec_noise = noise_A @ weighted_noise_prob.squeeze(0)
+                h_vec_noise = noise_A @ weighted_noise_proba.squeeze(0)
                 # the part of the bound on h that is independend on the action
                 h_vec +=  h_vec_state + h_vec_noise
 
@@ -291,7 +277,3 @@ class CBF:
                 h_action_dependend += noise_prob * action_A
             res.append((action_partition, h_action_dependend.squeeze().detach().numpy(), h_vec.squeeze().detach().numpy()))
         return res
-    
-    def continuous_scbf(self, state):
-        nominal_action = self.policy(state).squeeze(0).detach()
-        h_current = self.h_func(state)

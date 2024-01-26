@@ -43,10 +43,8 @@ class Evaluator:
 
             if cbf is None:
                 action = agent.select_action(state, exploration=False)
-            elif cbf and not self.stochastic:
+            elif cbf:
                 action = cbf.safe_action(state)
-            else:
-                
 
             if self.is_discrete:
                 state, reward, terminated, _, _ = play_env.step(action.item())
