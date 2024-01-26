@@ -11,7 +11,7 @@ Also a Neural Network Dynamical Model (NNDM) is trained parallel to the agents, 
 
 
 ## Installation
-The use this library it is recommended to install the packages from the requirements.txt file. This can be done by running the following command in the terminal:
+The use this library it is recommended to install the packages from the requirements.txt file. This can be done by running the following command in the terminal: \newline
 ```pip install -r requirements.txt```
 
 ## Usage
