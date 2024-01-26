@@ -28,9 +28,11 @@ import gymnasium as gym
 
 train = True
 
-env = Cartpole()
+# env = Cartpole()
 # env = DiscreteLunarLander()
-# env = ContinuousLunarLander(noise=True)
+env = ContinuousLunarLander(noise=True)
+
+print(env.env.spec)
 
 if train:
     pipeline = Trainer(env)
