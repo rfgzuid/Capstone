@@ -86,7 +86,7 @@ else:
 
     evaluator.play(policy)
 
-    # Evaluation metrics plot to show - 10 agents are simualted for 500 frames
+    # Evaluation metrics plot to show - 10 agents are simulated for 500 frames
     if with_CBF:
         evaluator.plot(policy, 0.9, 0, N, 500, cbf=cbf)
     else:
