@@ -80,6 +80,7 @@ else:
         evaluator.plot(policy, 0.9, 0, N, 500, cbf)
     else:
         evaluator.plot(policy, 0.9, 0, N, 500, None)
+```
 
 ## MOSCOW requirements
 1.Must show understanding of RL by implementing model-based RL for a safety critical system.
