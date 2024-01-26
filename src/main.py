@@ -26,7 +26,7 @@ from capstone.ddpg import Actor
 
 import gymnasium as gym
 
-train = True
+train = False
 
 # env = Cartpole()
 # env = DiscreteLunarLander()
