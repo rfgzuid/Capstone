@@ -102,7 +102,6 @@ We managed to implement all the MoSCoW requirements. The deliverables for each r
 3. **Should** implement Stochastic Control Barrier Functions (SCBF) to ensure safe reinforcement learning. 
     - Used scripts: barriers.py, settings.py, cbf.py, noise.py
 4. **Should/could** evaluate the effectiveness of the RL system (with CBFs) by counting the number of safety violations and plotting the reward over episodes. 
-    - Used scripts: evaluation.py
     1. **Should** choose an appropriate evaluation metric. 
         - Used scripts: evaluation.py
     2. **Should** evaluate discrete CBF on 1 standard reinforcement learning benchmark (cartpole).
@@ -136,11 +135,12 @@ We recognize that crafting a concave h function this way is very limited, as sta
 ## Authors
 -   
 ## References
+- [SCBF SOURCE], (https://arxiv.org/abs/2302.07469)
 - [DDPG SOURCE], (https://github.com/vy007vikas/PyTorch-ActorCriticRL)
 - [DDQN SOURCE], (https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html)
 - [BOUNDPROPAGATION SOURCE], (https://github.com/Zinoex/bound_propagation/blob/main/README.md)
 
-
+[SCBF SOURCE]: https://arxiv.org/abs/2302.07469
 [DDPG SOURCE]: https://github.com/vy007vikas/PyTorch-ActorCriticRL
 [DDQN SOURCE]: https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
 [BOUNDPROPAGATION SOURCE]: https://github.com/Zinoex/bound_propagation/blob/main/README.md
