@@ -27,17 +27,20 @@ In the ddpg.py and the ddqn.py files, the neural network architectures and updat
 
 ## MOSCOW requirements
 1.Must show understanding of RL by implementing model-based RL for a safety critical system.
+    
     - Must show understanding of RL by implementing model free RL for a safety critical 
     system.
     
     - Used scripts: main.py, ddpg.py, ddqn.py, settings.py, noise.py
 
 2.Should evaluate the method on 1 standard reinforcement learning benchmark (cartpole).
+    
     - Should evaluate discrete CBF on 1 standard reinforcement learning benchmark (cartpole).
     
     - Used scripts: main.py, ddqn.py, settings.py, noise.py, evaluation.py, nndm.py, 
 
 3.Could evaluate the method on 2 more advanced reinforcement learning benchmarks (lunar lander and bipedal walker).
+    
     - Could evaluate discrete CBF on 1 advanced reinforcement learning benchmark (lunar lander discrete)
     
     - Could evaluate continuous CBF and SCBF on 1 advanced reinforcement learning benchmark (lunar lander continuous with added stochasticity)
