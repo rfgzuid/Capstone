@@ -26,11 +26,11 @@ from capstone.ddpg import Actor
 
 import gymnasium as gym
 
-train = False
+train = True
 
-# env = Cartpole()
+env = Cartpole()
 # env = DiscreteLunarLander()
-env = ContinuousLunarLander(noise=True)
+# env = ContinuousLunarLander(noise=True)
 
 if train:
     pipeline = Trainer(env)
