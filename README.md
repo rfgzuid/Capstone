@@ -9,6 +9,8 @@ The library support training of DDQN (discrete actions) and DDPG (continuous act
 
 Also a Neural Network Dynamical Model (NNDM) is trained parallel to the agents, using the same Replay Memory. Both the NNDM and Agent parameters for each environment are saved in the 'Models' folder. These can directly be loaded and evaluated using the library.
 
+## Project discription
+In this project we implemented both discrete and continuous Control Barrier Functions (CBFs) on top of a Reinforcement learning agent in order to have some theoretical probability of being unsafe (P_u) in a certain time window of length K. The model is trained, and evaluated and plots of this theoretical and empirical probability are plotted.
 
 ## Installation
 The use this library it is recommended to install the packages from the requirements.txt file. This can be done by running the following command in the terminal:
@@ -16,14 +18,80 @@ The use this library it is recommended to install the packages from the requirem
 ```pip install -r requirements.txt```
 
 ## Usage
-The library can be used to train agents for the different environments. The training can be done by running the following command in the terminal: ```python main.py```. In the main.py file, the environment can be changed by uncommenting the desired environment. If the train bool is set to True either a DDQN or DDPG agent is trained, if it is set to False a simulation of the environment is run.
+The library can be used to train agents for the different environments. The training can be done by running the following command in the terminal: ```python main.py```. In the main.py file, the environment can be changed by uncommenting the desired environment. If the train bool variable is set to True either a DDQN or DDPG agent is trained, if it is set to False a simulation of the environment is run.
 
 In the settings.py file all hyperparameters for the environment wrappers and agents can be changed. 
 
-In the ddpg.py and the ddqn.py files, the neural network architectures and updater steps are setup.
+In the ddpg.py and the ddqn.py files, the neural network architectures and updater steps for the agents are setup.
+
+In the evaluation.py file, the evaluation metrics are calculated and plotted.
+
+In the nndm.py file, the neural newtwork dynamical model (NNDM) is setup and trained. This neural network is used to predict the next state given the current state and action.
+
+In the barriers.py file, the h functions are setup, these functions are used for the (S)CBFs.
+
+In the cbf.py file, the CBFs(control barrier functions) are setup.
+
+In the noise.py file, the noise functions are setup and custom wrappers for the environments are setup. We do this to make the environment stochastic in order to use the SCBFs.
+
+
 
 ## Example
+Below is a short example of how to use the library to setup and train the cartpole environment:
 
+```python
+# Import the packages and modules created in source files
+import torch
+
+from src.capstone.settings import Cartpole, DiscreteLunarLander, ContinuousLunarLander
+from src.capstone.training import Trainer
+from src.capstone.evaluation import Evaluator
+
+from src.capstone.barriers import NNDM_H
+from src.capstone.cbf import CBF
+
+from src.capstone.nndm import NNDM
+from src.capstone.dqn import DQN
+from src.capstone.ddpg import Actor
+
+# Initialize the train parameter as True for this example
+train = True
+
+# Initialize the process with CBFs
+with_CBF = True
+
+# Create the environment of Cartpole
+env = Cartpole()
+
+# main
+if not train:
+    pipeline = Trainer(env)
+    policy, nndm = pipeline.train()
+
+    torch.save(policy.state_dict(), f'../models/Agents/{type(env).__name__}')
+    torch.save(nndm.state_dict(), f'../models/NNDMs/{type(env).__name__}')
+else:
+    policy = DQN(env) if env.is_discrete else Actor(env)
+    policy_params = torch.load(f'../models/Agents/{type(env).__name__}')
+    policy.load_state_dict(policy_params)
+
+    nndm = NNDM(env)
+    nndm_params = torch.load(f'../models/NNDMs/{type(env).__name__}')
+    nndm.load_state_dict(nndm_params)
+
+    evaluator = Evaluator(env)
+
+    h = NNDM_H(env, nndm)
+    cbf = CBF(env, h, policy, alpha=0.9)
+
+    evaluator.play(policy)
+
+    # Evaluation metrics plot to show - 10 agents are simualted for 500 frames
+    if with_CBF:
+        evaluator.plot(policy, 0.9, 0, N, 500, cbf=cbf)
+    else:
+        evaluator.plot(policy, 0.9, 0, N, 500)
+```
 
 ## MOSCOW requirements
 We managed to implement all the MoSCoW requirements. The deliverables for each requirement can be found in the following files:
@@ -61,14 +129,17 @@ Cartpole
 - Position [-2.4 m, 2.4 m]
 
 Lunar Lander
-- Angle []
-- X position []
+- Angle [-30 deg, 30 deg]
+- X position [-1, 1]
 
 We recognize that crafting a concave h function this way is very limited, as state elements are only considered independent of one another. More complex functions could be specified in the settings.py file; for example h constraints that consider a combination of position & velocity.
 
 ## References
-- 
+- [DDPG SOURCE], (https://github.com/vy007vikas/PyTorch-ActorCriticRL)
+- [DDQN SOURCE], (https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html)
+- [BOUNDPROPAGATION SOURCE], (https://github.com/Zinoex/bound_propagation/blob/main/README.md)
 
 
 [DDPG SOURCE]: https://github.com/vy007vikas/PyTorch-ActorCriticRL
 [DDQN SOURCE]: https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
+[BOUNDPROPAGATION SOURCE]: https://github.com/Zinoex/bound_propagation/blob/main/README.md
