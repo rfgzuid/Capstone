@@ -22,7 +22,7 @@ The library can be used to train agents for the different environments. The trai
 
 - `settings.py`: all hyperparameters for the environment wrappers and agents can be changed. 
 
-- `ddpg.py and the ddqn.py`: the neural network architectures and updater steps for the agents are setup.
+- `ddpg.py, ddqn.py`: the neural network architectures and updater steps for the agents are setup.
 
 - `evaluation.py`: the evaluation metrics are calculated and plotted.
 
