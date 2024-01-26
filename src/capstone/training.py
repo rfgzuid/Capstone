@@ -35,16 +35,9 @@ class Trainer:
         self.rewards = []
         self.termination_frames = []
         self.nndm_losses = []
-        self.actor_losses = []
 
     def train(self):
-        if self.is_discrete:
-            return self.ddqn_train()
-        else:
-            return self.ddpg_train()
-
-    def ddqn_train(self):
-        for episode_num in tqdm(range(self.settings['num_episodes'])):
+        for _ in tqdm(range(self.settings['num_episodes'])):
             state, _ = self.env.reset()
             state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
 
@@ -55,8 +48,14 @@ class Trainer:
             frame = 0
 
             while not done:
-                action = self.policy.select_action(state)
-                observation, reward, terminated, _, _ = self.env.step(action.item())
+                if self.is_discrete:
+                    action = self.policy.select_action(state)
+                    observation, reward, terminated, _, _ = self.env.step(action.item())
+                else:
+                    action = self.actor.select_action(state.squeeze())
+                    observation, reward, terminated, _, _ = self.env.step(action.detach().numpy())
+                    action = action.clone().detach().unsqueeze(dim=0)
+
                 truncated = (frame == self.max_frames)
                 episode_reward += reward
 
@@ -79,8 +78,16 @@ class Trainer:
                 if loss_nndm is not None:
                     nndm_loss.append(loss_nndm)
 
-                self.policy.update(batch, self.target)
-                self.target.soft_update(self.policy)
+                if self.is_discrete:
+                    self.policy.update(batch, self.target)
+                    self.target.soft_update(self.policy)
+
+                else:
+                    self.critic.update(batch, self.critic_target, self.actor_target)
+                    self.actor.update(batch, self.critic)
+
+                    self.actor_target.soft_update(self.actor)
+                    self.critic_target.soft_update(self.critic)
 
                 frame += 1
 
@@ -94,75 +101,9 @@ class Trainer:
 
         self.train_plots(is_result=True)
 
-        return self.policy, self.nndm
+        return (self.policy, self.nndm) if self.is_discrete else (self.actor, self.nndm)
 
-    def ddpg_train(self):
-        for episode_num in tqdm(range(self.settings['num_episodes'])):
-            state, _ = self.env.reset()
-            state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
-
-            done = False
-            episode_reward = 0.0
-            nndm_loss = []
-            actor_loss = []
-
-            frame = 0
-
-            while not done:
-                action = self.actor.select_action(state.squeeze())
-
-                observation, reward, terminated, _, _ = self.env.step(action.detach().numpy())
-                truncated = (frame == self.max_frames)
-                episode_reward += reward
-
-                action = action.clone().detach().unsqueeze(dim=0)
-                reward = torch.tensor([reward], dtype=torch.float32)
-                done = terminated or truncated
-
-                next_state = torch.tensor(observation, dtype=torch.float32).unsqueeze(0)
-                self.replay_memory.push(state, action, next_state, reward, int(terminated))
-
-                state = next_state
-
-                if len(self.replay_memory) < self.settings['batch_size']:
-                    batch = None
-                else:
-                    transitions = self.replay_memory.sample(self.settings['batch_size'])
-                    batch = Transition(*zip(*transitions))
-
-                loss_nndm = self.nndm.update(batch)
-                loss_actor = self.actor.update(batch, self.critic)
-
-                if loss_nndm is not None:
-                    nndm_loss.append(loss_nndm)
-                if loss_actor is not None:
-                    actor_loss.append(loss_actor)
-
-                self.critic.update(batch, self.critic_target, self.actor_target)
-                self.actor.update(batch, self.critic)
-
-                self.actor_target.soft_update(self.actor)
-                self.critic_target.soft_update(self.critic)
-
-                frame += 1
-            avg_nndm_loss = sum(nndm_loss) / len(nndm_loss) if len(nndm_loss) != 0 else 0.
-            avg_actor_loss = sum(actor_loss)/len(actor_loss) if len(actor_loss) != 0 else 0.
-
-            self.rewards.append(episode_reward)
-            self.termination_frames.append(frame)
-            self.nndm_losses.append(avg_nndm_loss)
-            self.actor_losses.append(avg_actor_loss)
-
-            if episode_num % 50 == 0 and episode_num != 0:
-                torch.save(self.actor.state_dict(), f'Saved_models/Episode:{episode_num}_reward:{round(episode_reward, 2)}')
-
-            self.train_plots()
-
-        self.train_plots(is_result=True)
-
-        return self.actor, self.nndm
-
-    def train_plots(self, avg_window=10, is_result=False):
+    def train_plots(self, is_result=False):
         plt.figure(1)
 
         plt.clf()
@@ -195,11 +136,3 @@ class Trainer:
             plt.title(f"{self.env} End frame")
             plt.savefig(f"Plots_final_models/{self.env}_EndFrame")
             plt.show()
-
-            plt.xlabel('Episode')
-            plt.ylabel('Actor loss')
-            plt.plot(self.actor_losses)
-            plt.title(f"{self.env} Actor Loss")
-            plt.savefig(f"Plots_final_models/{self.env}actor_loss")
-            plt.show()
-        
