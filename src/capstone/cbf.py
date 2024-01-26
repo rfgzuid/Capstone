@@ -53,8 +53,10 @@ class CBF:
     def safe_action(self, state: torch.tensor):
         if self.is_discrete:
             return self.discrete_cbf(state)
-        else:
+        elif not self.is_discrete and not self.is_stochastic:
             return self.continuous_cbf(state)
+        else:
+            return self.continuous_scbf(state)
 
     def discrete_cbf(self, state):
         # Discrete(n) has actions {0, 1, ..., n-1} - see gymnasium docs
@@ -289,3 +291,7 @@ class CBF:
                 h_action_dependend += noise_prob * action_A
             res.append((action_partition, h_action_dependend.squeeze().detach().numpy(), h_vec.squeeze().detach().numpy()))
         return res
+    
+    def continuous_scbf(self, state):
+        nominal_action = self.policy(state).squeeze(0).detach()
+        h_current = self.h_func(state)
