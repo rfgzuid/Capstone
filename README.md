@@ -22,10 +22,8 @@ In the settings.py file all hyperparameters for the environment wrappers and age
 
 In the ddpg.py and the ddqn.py files, the neural network architectures and updater steps are setup.
 
+## MOSCOW requirements
 
-## Examples
-
-## commands
 
 ## h functions
 
