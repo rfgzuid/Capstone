@@ -24,6 +24,8 @@ from capstone.nndm import NNDM
 from capstone.dqn import DQN
 from capstone.ddpg import Actor
 
+import gymnasium as gym
+
 train = False
 
 

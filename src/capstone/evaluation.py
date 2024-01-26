@@ -15,6 +15,11 @@ class Evaluator:
         self.is_discrete = env.is_discrete
 
         self.max_frames = env.settings['max_frames']
+        self.stochastic = False
+
+        if self.env.spec.additional_wrappers != tuple():
+            self.noise = env.settings['noise']
+            self.stochastic = True
 
         self.h_function = env.h_function
 
@@ -22,13 +27,14 @@ class Evaluator:
         self.image = type(env).__name__
 
     def play(self, agent, cbf: CBF = None):
-        specs = self.env.spec.additional_wrappers
+        specs = self.env.spec
         specs.kwargs['render_mode'] = 'human'
-        # specs.additional_wrappers = ()
-
-        print(specs)
+        specs.additional_wrappers = tuple()
 
         play_env = gym.make(specs)
+
+        if self.stochastic:
+            play_env = NoisyLanderWrapper(play_env, self.noise)
 
         state, _ = play_env.reset()
 

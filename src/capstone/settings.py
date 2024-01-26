@@ -161,9 +161,9 @@ class ContinuousLunarLander(Env):
 
         self.settings = {
             'noise': {
-                'x': 10,
-                'y': 10,
-                'theta': 0.01,
+                'x': 0.1,
+                'y': 0.1,
+                'theta': 0.1,
                 'v_x': 0.1,
                 'v_y': 0.1,
                 'v_theta': 0.1
@@ -225,7 +225,6 @@ class ContinuousLunarLander(Env):
 
         if noise:
             self.env = NoisyLanderWrapper(env, self.settings['noise'])
-            print(self.env.spec)
         else:
             self.env = env
 
@@ -236,7 +235,6 @@ class NoisyLanderWrapper(gym.Wrapper):
         self.noise = noise
 
     def step(self, action):
-        print('a')
         state, reward, terminated, truncated, _ = self.env.step(action)
 
         pos = np.array(self.env.unwrapped.lander.position)
