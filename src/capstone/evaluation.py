@@ -2,7 +2,8 @@ import gymnasium as gym
 
 import torch
 
-from .settings import Env, NoisyLanderWrapper
+from .settings import Env
+from.noise import CartPoleNoise, LunarLanderNoise
 from .cbf import CBF
 
 import matplotlib.pyplot as plt
@@ -34,7 +35,7 @@ class Evaluator:
         play_env = gym.make(specs)
 
         if self.stochastic:
-            play_env = NoisyLanderWrapper(play_env, self.noise)
+            play_env = LunarLanderNoise(play_env, self.noise)
 
         state, _ = play_env.reset()
 
