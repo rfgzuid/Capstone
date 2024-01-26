@@ -22,8 +22,18 @@ In the settings.py file all hyperparameters for the environment wrappers and age
 
 In the ddpg.py and the ddqn.py files, the neural network architectures and updater steps are setup.
 
-## MOSCOW requirements
+## Example
 
+
+## MOSCOW requirements
+1.Must show understanding of RL by implementing model-based RL for a safety critical system.
+    -> Must show understanding of RL by implementing model free RL for a safety critical system.
+    -> Used scripts 
+2.Should evaluate the method on 1 standard reinforcement learning benchmark (cartpole).
+    -> Should evaluate discrete CBF on 1 standard reinforcement learning benchmark (cartpole).
+3.Could evaluate the method on 2 more advanced reinforcement learning benchmarks (lunar lander and bipedal walker).
+    -> Could evaluate discrete CBF on 1 advanced reinforcement learning benchmark (lunar lander discrete)
+    -> Could evaluate continuous CBF and SCBF on 1 advanced reinforcement learning benchmark (lunar lander continuous with added stochasticity)
 
 ## h functions
 
