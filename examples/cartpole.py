@@ -25,7 +25,7 @@ N = 10
 env = Cartpole()
 
 # main
-if not train:
+if train:
     pipeline = Trainer(env)
     policy, nndm = pipeline.train()
 
