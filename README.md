@@ -35,7 +35,6 @@ In the cbf.py file, the CBFs(control barrier functions) are setup.
 In the noise.py file, the noise functions are setup and custom wrappers for the environments are setup. We do this to make the environment stochastic in order to use the SCBFs.
 
 
-
 ## Example
 Below is a short example of how to use the library to setup and train the cartpole environment:
 
@@ -64,7 +63,7 @@ with_CBF = True
 env = Cartpole()
 
 # main
-if not train:
+if train:
     pipeline = Trainer(env)
     policy, nndm = pipeline.train()
 
@@ -134,6 +133,8 @@ Lunar Lander
 
 We recognize that crafting a concave h function this way is very limited, as state elements are only considered independent of one another. More complex functions could be specified in the settings.py file; for example h constraints that consider a combination of position & velocity.
 
+## Authors
+-   
 ## References
 - [DDPG SOURCE], (https://github.com/vy007vikas/PyTorch-ActorCriticRL)
 - [DDQN SOURCE], (https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html)
