@@ -131,9 +131,7 @@ Lunar Lander
 - X position [-1, 1]
 
 We recognize that crafting a concave h function this way is very limited, as state elements are only considered independent of one another. More complex functions could be specified in the settings.py file; for example h constraints that consider a combination of position & velocity.
-
-## Authors
--   
+ 
 ## References
 - [SCBF SOURCE], (https://arxiv.org/abs/2302.07469)
 - [DDPG SOURCE], (https://github.com/vy007vikas/PyTorch-ActorCriticRL)
