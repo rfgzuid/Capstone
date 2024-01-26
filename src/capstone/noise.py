@@ -10,7 +10,19 @@ class CartPoleNoise(gym.Wrapper):
     def step(self, action):
         state, reward, terminated, truncated, _ = self.env.step(action)
 
-        print(self.env.state)
+        pos = np.array([self.env.unwrapped.state[0]])
+        pos += np.random.normal(0., self.noise['x'])
+
+        angle = np.array([self.env.unwrapped.state[1]])
+        angle += np.random.normal(0., self.noise['theta'])
+
+        pos_vel = np.array([self.env.unwrapped.state[2]])
+        pos_vel += np.random.normal(0., self.noise['v_x'])
+
+        ang_vel = np.array([self.env.unwrapped.state[3]])
+        ang_vel += np.random.normal(0., self.noise['v_theta'])
+
+        self.env.unwrapped.state = (pos[0], angle[0], pos_vel[0], ang_vel[0])
 
         return state, reward, terminated, truncated, None
 

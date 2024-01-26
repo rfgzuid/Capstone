@@ -49,7 +49,7 @@ class Cartpole(Env):
         self.settings = {
             'noise': {
                 'x': 0.01,
-                'theta': 0.01,
+                'theta': 1,
                 'v_x': 0.01,
                 'v_theta': 0.01
             },

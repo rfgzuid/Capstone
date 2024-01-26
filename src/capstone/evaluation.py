@@ -34,8 +34,10 @@ class Evaluator:
 
         play_env = gym.make(specs)
 
-        if self.stochastic:
+        if self.stochastic and self.env.spec.id == 'LunarLander-v2':
             play_env = LunarLanderNoise(play_env, self.noise)
+        elif self.stochastic and self.env.spec.id == 'CartPole-v1':
+            play_env = CartPoleNoise(play_env, self.noise)
 
         state, _ = play_env.reset()
 
