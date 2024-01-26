@@ -32,7 +32,6 @@ train = True
 # env = DiscreteLunarLander()
 env = ContinuousLunarLander(noise=True)
 
-print(env.env.spec)
 
 if train:
     pipeline = Trainer(env)
