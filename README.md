@@ -61,8 +61,8 @@ Cartpole
 - Position [-2.4 m, 2.4 m]
 
 Lunar Lander
-- Angle []
-- X position []
+- Angle [-30 deg, 30 deg]
+- X position [-1, 1]
 
 We recognize that crafting a concave h function this way is very limited, as state elements are only considered independent of one another. More complex functions could be specified in the settings.py file; for example h constraints that consider a combination of position & velocity.
 
