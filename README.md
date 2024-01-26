@@ -15,9 +15,13 @@ The use this library it is recommended to install the packages from the requirem
 
 ```pip install -r requirements.txt```
 
-
-
 ## Usage
+The library can be used to train agents for the different environments. The training can be done by running the following command in the terminal: ```python main.py```. In the main.py file, the environment can be changed by uncommenting the desired environment. If the train bool is set to True either a DDQN or DDPG agent is trained, if it is set to False a simulation of the environment is run.
+
+In the settings.py file all hyperparameters for the environment wrappers and agents can be changed. 
+
+In the ddpg.py and the ddqn.py files, the neural network architectures and updater steps are setup.
+
 
 ## Examples
 
@@ -41,5 +45,8 @@ Bipedal walker
 We recognize that crafting a concave h function this way is very limited, as state elements are only considered independent of one another. More complex functions could be specified in the settings.py file; for example h constraints that consider a combination of position & velocity.
 
 ## References
-- [DDPG SOURCE]: https://github.com/vy007vikas/PyTorch-ActorCriticRL
-- [DDQN SOURCE]: https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
+- 
+
+
+[DDPG SOURCE]: https://github.com/vy007vikas/PyTorch-ActorCriticRL
+[DDQN SOURCE]: https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
