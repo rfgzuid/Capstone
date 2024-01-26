@@ -101,7 +101,7 @@ class Cartpole(Env):
         self.h_name = ['X Position [-2.4, 2.4]',
                        'Angle [-12, 12] deg']
 
-        self.env = CartPoleNoise(self.env, self.settings['noise'])
+        self.env = CartPoleNoise(env, self.settings['noise'])
 
 
 class DiscreteLunarLander(Env):
@@ -168,7 +168,7 @@ class DiscreteLunarLander(Env):
         self.h_name = ['X Position [-1, 1]',
                        'Angle [-90, 90] deg']
 
-        self.env = LunarLanderNoise(self.env, self.settings['noise'])
+        self.env = LunarLanderNoise(env, self.settings['noise'])
 
 
 class ContinuousLunarLander(Env):
@@ -241,4 +241,4 @@ class ContinuousLunarLander(Env):
         self.h_name = ['X Position [-1, 1]',
                        'Angle [-90, 90] deg']
 
-        self.env = LunarLanderNoise(self.env, self.settings['noise'])
+        self.env = LunarLanderNoise(env, self.settings['noise'])
