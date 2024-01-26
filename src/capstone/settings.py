@@ -183,12 +183,12 @@ class ContinuousLunarLander(Env):
 
         self.settings = {
             'noise': {
-                'x': 0.1,
-                'y': 0.1,
-                'theta': 0.1,
-                'v_x': 0.1,
-                'v_y': 0.1,
-                'v_theta': 0.1
+                'x': 0.01,
+                'y': 0.01,
+                'theta': 0.05,
+                'v_x': 0.05,
+                'v_y': 0.05,
+                'v_theta': 0.05
             },
 
             'replay_size': 1_000_000,
@@ -207,14 +207,14 @@ class ContinuousLunarLander(Env):
 
             'Actor_layers': (256, 128, 64),
             'Actor_activation': F.relu,
-            'Actor_optim': optim.Adam,
+            'Actor_optim': optim.AdamW,
             'Actor_lr': 1e-4,
             'Action_bound': 1.,  # action space is bounded to [-1, 1] - see gymnasium docs
 
             'Critic_layers': {'s': (256, 128), 'a': (128,), 'concat': (128,)},
             'Critic_activation': F.relu,
             'Critic_criterion': nn.SmoothL1Loss,
-            'Critic_optim': optim.Adam,
+            'Critic_optim': optim.AdamW,
             'Critic_lr': 1e-3,
 
             'OU_mu': 0,
