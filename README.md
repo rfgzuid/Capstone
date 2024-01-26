@@ -44,6 +44,11 @@ In the ddpg.py and the ddqn.py files, the neural network architectures and updat
     
     - Used scripts:
 
+## (Stochastic) control barrier functions
+
+Together with the h functions and a controller we can apply a filter on the controller in order to make the controller safer. Safety is defined through the h function. When you are in an environment you can use a control barrier function, discrete or continuous. If you want to account for stochasticity you can use a stochastic control barrier function but keep in mind this is only implemented for continuous controls. Takes a state as input and outputs a control.
+
+
 ## h functions
 
 For the environments, concave h functions are used so that we convert the CBF constraint from ED to CED [SCBF SOURCE]. The output of the h functions are vectors; each element in the vector corresponds to a safety-critical state element for which we define bounds. The parabolas are defined to have maximum 1, and have their roots at the bounds of unsafety. 
@@ -55,9 +60,6 @@ Cartpole
 Lunar Lander
 - Angle []
 - X position []
-
-Bipedal walker
-- Hull/head height []
 
 We recognize that crafting a concave h function this way is very limited, as state elements are only considered independent of one another. More complex functions could be specified in the settings.py file; for example h constraints that consider a combination of position & velocity.
 
