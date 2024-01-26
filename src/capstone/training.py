@@ -167,12 +167,11 @@ class Trainer:
 
         plt.clf()
         plt.xlabel('Episode')
-        plt.ylabel('Episodic reward/loss')
+        plt.ylabel('Episodic reward')
 
         plt.plot(self.rewards, "-b")
-        plt.plot(self.actor_losses, "-r")
 
-        plt.legend(["Reward", "Loss"], loc = "upper right")
+        plt.legend(["Reward"], loc = "lower right")
         if not is_result:
             plt.title('Training...')
             plt.pause(0.001)
