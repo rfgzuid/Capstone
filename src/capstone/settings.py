@@ -146,7 +146,7 @@ class DiscreteLunarLander(Env):
         }
 
         # 1 - x{0}^2 / 1^2
-        # 1 - x{4}^2/ rad(90)^2
+        # 1 - x{4}^2/ rad(30)^2
         self.h_function = nn.Sequential(
             FixedLinear(
                 torch.tensor([
@@ -159,14 +159,14 @@ class DiscreteLunarLander(Env):
             FixedLinear(
                 torch.tensor([
                     [-1 / 1. ** 2, 0],
-                    [0, -1 / math.radians(90.) ** 2]
+                    [0, -1 / math.radians(30.) ** 2]
                 ]),
                 torch.tensor([1., 1.])
             )
         )
 
         self.h_name = ['X Position [-1, 1]',
-                       'Angle [-90, 90] deg']
+                       'Angle [-30, 30] deg']
 
         self.env = LunarLanderNoise(env, self.settings['noise'])
 
@@ -219,7 +219,7 @@ class ContinuousLunarLander(Env):
         }
 
         # 1 - x{0}^2 / 1^2
-        # 1 - x{4}^2 / rad(90)^2
+        # 1 - x{4}^2 / rad(30)^2
         self.h_function = nn.Sequential(
             FixedLinear(
                 torch.tensor([
@@ -232,13 +232,13 @@ class ContinuousLunarLander(Env):
             FixedLinear(
                 torch.tensor([
                     [-1 / 1. ** 2, 0],
-                    [0, -1 / math.radians(90.) ** 2]
+                    [0, -1 / math.radians(30.) ** 2]
                 ]),
                 torch.tensor([1., 1.])
             )
         )
 
         self.h_name = ['X Position [-1, 1]',
-                       'Angle [-90, 90] deg']
+                       'Angle [-30, 30] deg']
 
         self.env = LunarLanderNoise(env, self.settings['noise'])
