@@ -24,7 +24,7 @@ from capstone.nndm import NNDM
 from capstone.dqn import DQN
 from capstone.ddpg import Actor
 
-train = True
+train = False
 
 # env = Cartpole()
 # env = DiscreteLunarLander()
@@ -51,5 +51,5 @@ else:
     h = NNDM_H(env, nndm)
     cbf = CBF(env, h, policy, alpha=0.9)
 
-    evaluator.play(policy)
-    evaluator.plot(policy, 0.9, 0, 10, 500, cbf)
+    # evaluator.play(policy)
+    evaluator.plot(policy, 0.9, 0, 10, 500, cbf=cbf)

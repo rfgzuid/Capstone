@@ -3,8 +3,8 @@ import gymnasium as gym
 import torch
 
 from .settings import Env
-from.noise import CartPoleNoise, LunarLanderNoise
-from .cbf import CBF
+from .noise import CartPoleNoise, LunarLanderNoise
+from .cbf import CBF, InfeasibilityError
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -78,15 +78,19 @@ class Evaluator:
                 h_values.append(h_tensor.squeeze().numpy())
 
                 if cbf is None:
-                    action = agent.select_action(state, exploration=False)
-                    state, reward, terminated, truncated, _ = self.env.step(action.item())
+                    if self.is_discrete:
+                        action = agent.select_action(state, exploration=False)
+                        state, reward, terminated, truncated, _ = self.env.step(action.item())
+                    else:
+                        action = agent.select_action(state.squeeze(), exploration=False)
+                        state, reward, terminated, truncated, _ = self.env.step(action.detach().numpy())
+
                 else:
                     try:
-                        action = cbf.safe_action(state)
-                    except Exception as e:
-                        break
-                    else:
+                        action = np.array(cbf.safe_action(state.squeeze()))
                         state, reward, terminated, truncated, _ = self.env.step(action)
+                    except InfeasibilityError:
+                        terminated = True
 
                 current_frame += 1
                 done = truncated or terminated
@@ -97,7 +101,7 @@ class Evaluator:
 
         return end_frames, h_values_all_runs
 
-    def plot(self, agent, alpha, delta, N, M, cbf: CBF): # N is the number of experiments
+    def plot(self, agent, alpha, delta, N, M, cbf: CBF = None): # N is the number of experiments
         s_knot, _ = self.env.reset(seed=42) # this is the initial state
         end_frames, all_h_values = self.mc_simulate(agent, N, 42, cbf) # what you get from the simulation
 
