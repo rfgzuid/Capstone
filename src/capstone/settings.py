@@ -33,7 +33,7 @@ class Env(ABC):
 
     env: gym.Env
     is_discrete: bool
-    settings: dict[Any]
+    settings: dict[str | Any]
     h_function: nn.Sequential
     h_name: list[str]
 
@@ -155,8 +155,7 @@ class DiscreteLunarLander(Env):
 class ContinuousLunarLander(Env):
 
     def __init__(self, noise=False) -> None:
-
-        env = gym.make("LunarLander-v2", continuous=True)
+        self.env = gym.make("LunarLander-v2", continuous=True)
         self.is_discrete = False
 
         self.settings = {
@@ -224,13 +223,11 @@ class ContinuousLunarLander(Env):
                        'Angle [-90, 90] deg']
 
         if noise:
-            self.env = NoisyLanderWrapper(env, self.settings['noise'])
-        else:
-            self.env = env
+            self.env = NoisyLanderWrapper(self.env, self.settings['noise'])
 
 
 class NoisyLanderWrapper(gym.Wrapper):
-    def __init__(self, env: ContinuousLunarLander.env, noise: dict[str, float]):
+    def __init__(self, env, noise: dict[str, float]):
         super().__init__(env)
         self.noise = noise
 
