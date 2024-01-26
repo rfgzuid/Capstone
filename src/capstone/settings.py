@@ -47,8 +47,8 @@ class Cartpole(Env):
 
         self.settings = {
             'noise': {
-                'x': 0.01,
-                'theta': 0.01,
+                'x': 0.001,
+                'theta': 0.001,
                 'v_x': 0.01,
                 'v_theta': 0.01
             },
@@ -79,7 +79,7 @@ class Cartpole(Env):
         }
 
         # 1 - x{0}^2 / 2.4^2
-        # 1 - x{4}^2 / rad(12)^2
+        # 1 - x{2}^2 / rad(12)^2
         self.h_function = nn.Sequential(
             FixedLinear(
                 torch.tensor([
@@ -112,12 +112,12 @@ class DiscreteLunarLander(Env):
 
         self.settings = {
             'noise': {
-                'x': 0.1,
-                'y': 0.1,
-                'theta': 0.1,
-                'v_x': 0.1,
-                'v_y': 0.1,
-                'v_theta': 0.1
+                'x': 0.01,
+                'y': 0.01,
+                'theta': 0.01,
+                'v_x': 0.01,
+                'v_y': 0.01,
+                'v_theta': 0.01
             },
 
             'replay_size': 10_000,
