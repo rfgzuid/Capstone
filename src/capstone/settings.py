@@ -230,7 +230,7 @@ class ContinuousLunarLander(Env):
 
 
 class NoisyLanderWrapper(gym.Wrapper):
-    def __init__(self, env, noise: dict[str, float]):
+    def __init__(self, env: ContinuousLunarLander.env, noise: dict[str, float]):
         super().__init__(env)
         self.noise = noise
 
