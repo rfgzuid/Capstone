@@ -12,14 +12,14 @@ Also a Neural Network Dynamical Model (NNDM) is trained parallel to the agents, 
 
 ## Installation
 The folowing packages are required:
-"""pip install gymnasium"""
-"""pip install numpy"""
-"""pip install matplotlib"""
-"""pip install torch"""
-"""pip install scipy"""
-"""pip install bound-propagation"""
-"""pip install cvxpy""" 
-"""pip install tqdm"""
+```pip install gymnasium``` \n
+```pip install numpy``` \n
+```pip install matplotlib``` \n
+```pip install torch``` \n
+```pip install scipy``` \n
+```pip install bound-propagation``` \n
+```pip install cvxpy``` \n
+```pip install tqdm``` \n
 
 ## Usage
 
