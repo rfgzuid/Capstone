@@ -5,7 +5,7 @@ Reinforcement learning compatible with OpenAI gymnasium. Currently implemented:
 - Cartpole v1
 - Lunar lander v2 (discrete & continuous)
 
-The library support training of DDQN (discrete actions) and DDPG (continuous actions) agents. The code is based on [SOURCES].
+The library support training of DDQN (discrete actions) and DDPG (continuous actions) agents. The code is based on [DDPG SOURCE] [DDQN SOURCE].
 
 Also a Neural Network Dynamical Model (NNDM) is trained parallel to the agents, using the same Replay Memory. Both the NNDM and Agent parameters for each environment are saved in the 'Models' folder. These can directly be loaded and evaluated using the library.
 
@@ -40,5 +40,6 @@ Bipedal walker
 
 We recognize that crafting a concave h function this way is very limited, as state elements are only considered independent of one another. More complex functions could be specified in the settings.py file; for example h constraints that consider a combination of position & velocity.
 
-## Citations
-citations
+## References
+- [DDPG SOURCE]: https://github.com/vy007vikas/PyTorch-ActorCriticRL
+- [DDQN SOURCE]: https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
