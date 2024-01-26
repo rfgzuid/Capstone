@@ -41,15 +41,14 @@ class Env(ABC):
 
 class Cartpole(Env):
 
-    def __init__(self, noise=False) -> None:
-
-        self.env = gym.make("CartPole-v1")
+    def __init__(self) -> None:
+        env = gym.make("CartPole-v1")
         self.is_discrete = True
 
         self.settings = {
             'noise': {
-                'x': 0.01,
-                'theta': 0.01,
+                'x': 0.001,
+                'theta': 0.001,
                 'v_x': 0.01,
                 'v_theta': 0.01
             },
@@ -80,7 +79,7 @@ class Cartpole(Env):
         }
 
         # 1 - x{0}^2 / 2.4^2
-        # 1 - x{4}^2 / rad(12)^2
+        # 1 - x{2}^2 / rad(12)^2
         self.h_function = nn.Sequential(
             FixedLinear(
                 torch.tensor([
@@ -102,25 +101,23 @@ class Cartpole(Env):
         self.h_name = ['X Position [-2.4, 2.4]',
                        'Angle [-12, 12] deg']
 
-        if noise:
-            self.env = CartPoleNoise(self.env, self.settings['noise'])
+        self.env = CartPoleNoise(env, self.settings['noise'])
 
 
 class DiscreteLunarLander(Env):
 
-    def __init__(self, noise=False) -> None:
-
-        self.env = gym.make("LunarLander-v2")
+    def __init__(self) -> None:
+        env = gym.make("LunarLander-v2")
         self.is_discrete = True
 
         self.settings = {
             'noise': {
-                'x': 0.1,
-                'y': 0.1,
-                'theta': 0.1,
-                'v_x': 0.1,
-                'v_y': 0.1,
-                'v_theta': 0.1
+                'x': 0.01,
+                'y': 0.01,
+                'theta': 0.01,
+                'v_x': 0.01,
+                'v_y': 0.01,
+                'v_theta': 0.01
             },
 
             'replay_size': 10_000,
@@ -149,7 +146,7 @@ class DiscreteLunarLander(Env):
         }
 
         # 1 - x{0}^2 / 1^2
-        # 1 - x{4}^2/ rad(90)^2
+        # 1 - x{4}^2/ rad(30)^2
         self.h_function = nn.Sequential(
             FixedLinear(
                 torch.tensor([
@@ -162,23 +159,22 @@ class DiscreteLunarLander(Env):
             FixedLinear(
                 torch.tensor([
                     [-1 / 1. ** 2, 0],
-                    [0, -1 / math.radians(90.) ** 2]
+                    [0, -1 / math.radians(30.) ** 2]
                 ]),
                 torch.tensor([1., 1.])
             )
         )
 
         self.h_name = ['X Position [-1, 1]',
-                       'Angle [-90, 90] deg']
+                       'Angle [-30, 30] deg']
 
-        if noise:
-            self.env = LunarLanderNoise(self.env, self.settings['noise'])
+        self.env = LunarLanderNoise(env, self.settings['noise'])
 
 
 class ContinuousLunarLander(Env):
 
-    def __init__(self, noise=False) -> None:
-        self.env = gym.make("LunarLander-v2", continuous=True)
+    def __init__(self) -> None:
+        env = gym.make("LunarLander-v2", continuous=True)
         self.is_discrete = False
 
         self.settings = {
@@ -223,7 +219,7 @@ class ContinuousLunarLander(Env):
         }
 
         # 1 - x{0}^2 / 1^2
-        # 1 - x{4}^2 / rad(90)^2
+        # 1 - x{4}^2 / rad(30)^2
         self.h_function = nn.Sequential(
             FixedLinear(
                 torch.tensor([
@@ -236,14 +232,13 @@ class ContinuousLunarLander(Env):
             FixedLinear(
                 torch.tensor([
                     [-1 / 1. ** 2, 0],
-                    [0, -1 / math.radians(90.) ** 2]
+                    [0, -1 / math.radians(30.) ** 2]
                 ]),
                 torch.tensor([1., 1.])
             )
         )
 
         self.h_name = ['X Position [-1, 1]',
-                       'Angle [-90, 90] deg']
+                       'Angle [-30, 30] deg']
 
-        if noise:
-            self.env = LunarLanderNoise(self.env, self.settings['noise'])
+        self.env = LunarLanderNoise(env, self.settings['noise'])

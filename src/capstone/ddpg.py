@@ -99,7 +99,6 @@ class Actor(nn.Module):
 
         nn.utils.clip_grad_value_(self.parameters(), 100)
         self.optimizer.step()
-        return loss.item()
 
     def soft_update(self, source: 'Actor') -> None:
         for target_param, param in zip(self.parameters(), source.parameters()):

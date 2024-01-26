@@ -24,28 +24,26 @@ from capstone.nndm import NNDM
 from capstone.dqn import DQN
 from capstone.ddpg import Actor
 
-import gymnasium as gym
+train = True
 
-train = False
-
-# env = Cartpole()1
+# env = Cartpole()
 # env = DiscreteLunarLander()
-env = ContinuousLunarLander(noise=True)
+env = ContinuousLunarLander()
 
 
 if train:
     pipeline = Trainer(env)
     policy, nndm = pipeline.train()
 
-    torch.save(policy.state_dict(), f'../Agents/{type(env).__name__}')
-    torch.save(nndm.state_dict(), f'../NNDMs/{type(env).__name__}')
+    torch.save(policy.state_dict(), f'../models/Agents/{type(env).__name__}')
+    torch.save(nndm.state_dict(), f'../models/NNDMs/{type(env).__name__}')
 else:
     policy = DQN(env) if env.is_discrete else Actor(env)
-    policy_params = torch.load(f'../Agents/{type(env).__name__}')
+    policy_params = torch.load(f'../models/Agents/{type(env).__name__}')
     policy.load_state_dict(policy_params)
 
     nndm = NNDM(env)
-    nndm_params = torch.load(f'../NNDMs/{type(env).__name__}')
+    nndm_params = torch.load(f'../models/NNDMs/{type(env).__name__}')
     nndm.load_state_dict(nndm_params)
 
     evaluator = Evaluator(env)
@@ -54,4 +52,4 @@ else:
     cbf = CBF(env, h, policy, alpha=0.9)
 
     evaluator.play(policy)
-    # evaluator.nice_plots(policy, 0.9, 0, 10, 500, 1)
+    evaluator.plot(policy, 0.9, 0, 10, 500, cbf)

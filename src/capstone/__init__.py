@@ -6,4 +6,5 @@ from .dqn import DQN
 from .ddpg import OUNoise, Actor, Critic
 from .training import Trainer
 from .evaluation import Evaluator
+from .probability import log_prob, truncated_normal_expectation, weighted_noise_prob, HR_probability
 from .cbf import CBF
