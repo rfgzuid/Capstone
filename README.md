@@ -67,7 +67,8 @@ Lunar Lander
 We recognize that crafting a concave h function this way is very limited, as state elements are only considered independent of one another. More complex functions could be specified in the settings.py file; for example h constraints that consider a combination of position & velocity.
 
 ## References
-- 
+- [DDPG SOURCE], (https://github.com/vy007vikas/PyTorch-ActorCriticRL)
+- [DDQN SOURCE], (https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html)
 
 
 [DDPG SOURCE]: https://github.com/vy007vikas/PyTorch-ActorCriticRL
