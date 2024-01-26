@@ -4,11 +4,26 @@ Safe reinforcement learning with stochastic control barrier functions (TI3165TU 
 Reinforcement learning compatible with OpenAI gymnasium. Currently implemented:
 - Cartpole v1
 - Lunar lander v2 (discrete & continuous)
-- Bipedal walker v3
 
-The library support training of DDQN (discrete actions) and DDPG (continuous actions) agents. The code is based on [SOURCES].
+The library support training of DDQN (discrete actions) and DDPG (continuous actions) agents. The code is based on [DDPG SOURCE] [DDQN SOURCE].
 
 Also a Neural Network Dynamical Model (NNDM) is trained parallel to the agents, using the same Replay Memory. Both the NNDM and Agent parameters for each environment are saved in the 'Models' folder. These can directly be loaded and evaluated using the library.
+
+
+## Installation
+The use this library it is recommended to install the packages from the requirements.txt file. This can be done by running the following command in the terminal:
+
+```pip install -r requirements.txt```
+
+## Usage
+The library can be used to train agents for the different environments. The training can be done by running the following command in the terminal: ```python main.py```. In the main.py file, the environment can be changed by uncommenting the desired environment. If the train bool is set to True either a DDQN or DDPG agent is trained, if it is set to False a simulation of the environment is run.
+
+In the settings.py file all hyperparameters for the environment wrappers and agents can be changed. 
+
+In the ddpg.py and the ddqn.py files, the neural network architectures and updater steps are setup.
+
+## MOSCOW requirements
+
 
 ## h functions
 
@@ -27,5 +42,9 @@ Bipedal walker
 
 We recognize that crafting a concave h function this way is very limited, as state elements are only considered independent of one another. More complex functions could be specified in the settings.py file; for example h constraints that consider a combination of position & velocity.
 
-## Citations
-citations
+## References
+- 
+
+
+[DDPG SOURCE]: https://github.com/vy007vikas/PyTorch-ActorCriticRL
+[DDQN SOURCE]: https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
