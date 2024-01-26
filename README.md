@@ -35,7 +35,7 @@ In the ddpg.py and the ddqn.py files, the neural network architectures and updat
 2.Should evaluate the method on 1 standard reinforcement learning benchmark (cartpole).
     - Should evaluate discrete CBF on 1 standard reinforcement learning benchmark (cartpole).
     
-    - Used scripts: main.py, ddqn.py, settings.py, noise.py, evaluation.py
+    - Used scripts: main.py, ddqn.py, settings.py, noise.py, evaluation.py, nndm.py, 
 
 3.Could evaluate the method on 2 more advanced reinforcement learning benchmarks (lunar lander and bipedal walker).
     - Could evaluate discrete CBF on 1 advanced reinforcement learning benchmark (lunar lander discrete)
