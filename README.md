@@ -20,19 +20,19 @@ The use this library it is recommended to install the packages from the requirem
 ## Usage
 The library can be used to train agents for the different environments. The training can be done by running the following command in the terminal: ```python main.py```. In the main.py file, the environment can be changed by uncommenting the desired environment. If the train bool variable is set to True either a DDQN or DDPG agent is trained, if it is set to False a simulation of the environment is run.
 
-In the settings.py file all hyperparameters for the environment wrappers and agents can be changed. 
+- `settings.py`: all hyperparameters for the environment wrappers and agents can be changed. 
 
-In the ddpg.py and the ddqn.py files, the neural network architectures and updater steps for the agents are setup.
+- `ddpg.py and the ddqn.py`: the neural network architectures and updater steps for the agents are setup.
 
-In the evaluation.py file, the evaluation metrics are calculated and plotted.
+- `evaluation.py`: the evaluation metrics are calculated and plotted.
 
-In the nndm.py file, the neural newtwork dynamical model (NNDM) is setup and trained. This neural network is used to predict the next state given the current state and action.
+- `nndm.py`: the neural newtwork dynamical model (NNDM) is setup and trained. This neural network is used to predict the next state given the current state and action.
 
-In the barriers.py file, the h functions are setup, these functions are used for the (S)CBFs.
+- `barriers.py`: the h functions are setup, these functions are used for the (S)CBFs.
 
-In the cbf.py file, the CBFs(control barrier functions) are setup.
+- `cbf.py`: the CBFs(control barrier functions) are setup.
 
-In the noise.py file, the noise functions are setup and custom wrappers for the environments are setup. We do this to make the environment stochastic in order to use the SCBFs.
+- `noise.py`: the noise functions are setup and custom wrappers for the environments are setup. We do this to make the environment stochastic in order to use the SCBFs.
 
 
 
