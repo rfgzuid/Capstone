@@ -97,7 +97,7 @@ class Evaluator:
 
         return end_frames, h_values_all_runs
 
-    def nice_plots(self, agent, alpha, delta, N, M, cbf: CBF): # N is the number of experiments
+    def plot(self, agent, alpha, delta, N, M, cbf: CBF): # N is the number of experiments
         s_knot, _ = self.env.reset(seed=42) # this is the initial state
         end_frames, all_h_values = self.mc_simulate(agent, N, 42, cbf) # what you get from the simulation
 

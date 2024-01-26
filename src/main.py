@@ -24,13 +24,11 @@ from capstone.nndm import NNDM
 from capstone.dqn import DQN
 from capstone.ddpg import Actor
 
-import gymnasium as gym
-
 train = False
 
-env = Cartpole()
+# env = Cartpole()
 # env = DiscreteLunarLander()
-# env = ContinuousLunarLander()
+env = ContinuousLunarLander()
 
 
 if train:
@@ -54,4 +52,4 @@ else:
     cbf = CBF(env, h, policy, alpha=0.9)
 
     evaluator.play(policy)
-    evaluator.nice_plots(policy, 0.9, 0, 10, 500, cbf)
+    evaluator.plot(policy, 0.9, 0, 10, 500, cbf)
