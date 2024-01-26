@@ -28,7 +28,6 @@ import gymnasium as gym
 
 train = False
 
-
 # env = Cartpole()
 # env = DiscreteLunarLander()
 env = ContinuousLunarLander(noise=True)
