@@ -35,7 +35,6 @@ The library can be used to train agents for the different environments. The trai
 - `noise.py`: the noise functions are setup and custom wrappers for the environments are setup. We do this to make the environment stochastic in order to use the SCBFs.
 
 
-
 ## Example
 Below is a short example of how to use the library to setup and train the cartpole environment:
 
@@ -64,7 +63,7 @@ with_CBF = True
 env = Cartpole()
 
 # main
-if not train:
+if train:
     pipeline = Trainer(env)
     policy, nndm = pipeline.train()
 
@@ -132,7 +131,7 @@ Lunar Lander
 - X position [-1, 1]
 
 We recognize that crafting a concave h function this way is very limited, as state elements are only considered independent of one another. More complex functions could be specified in the settings.py file; for example h constraints that consider a combination of position & velocity.
-
+ 
 ## References
 - [SCBF SOURCE], (https://arxiv.org/abs/2302.07469)
 - [DDPG SOURCE], (https://github.com/vy007vikas/PyTorch-ActorCriticRL)
