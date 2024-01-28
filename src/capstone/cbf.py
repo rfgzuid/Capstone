@@ -10,7 +10,6 @@ import torch
 import cvxpy as cp
 from collections.abc import Iterable
 from itertools import product
-import math
 
 
 class InfeasibilityError(Exception):
@@ -182,7 +181,7 @@ class CBF:
 
             # Solve the problem
             problem = cp.Problem(objective, constraints)
-            problem.solve()
+            problem.solve(solver='ECOS')
 
             if problem.status is cp.UNBOUNDED:
                 print("something goes very wrong")
@@ -194,7 +193,7 @@ class CBF:
         if safe_actions and len(safe_actions) > 1:
             return torch.tensor(min(safe_actions, key=lambda x: x[1], default=(None, None))[0])
         elif safe_actions:
-            return torch.tensor(safe_actions[0])
+            return torch.tensor(safe_actions[0][0])
         else:
             raise InfeasibilityError()
         
