@@ -1,9 +1,5 @@
 """
 Library TODO:
-- More metric monitoring/plotting in the training pipeline
-- Implement the (S)CBF code for both discrete and continuous action environments
-- Implement the evaluation metrics for CBF in evaluations.py
-
 - Add docstrings to files, classes & functions, and add extra (line) comments where necessary
 - Add type hints (only where it is really necessary for code understanding)
 - Add code sources (for both DDQN and DDPG) + articles on which the code is based
