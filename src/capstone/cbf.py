@@ -25,7 +25,7 @@ class CBF:
                  action_partitions: int = 4, noise_partitions = 2, is_stochastic = False, stds = None, h_ids = None):
         self.env = env.env
         self.state_size = self.env.observation_space.shape[0]
-        self.action_size = self.env.action_space.shape[0]
+        self.action_size = 1 if env.is_discrete else self.env.action_space.shape[0]
 
         self.is_discrete = env.is_discrete
         self.settings = env.settings
@@ -66,7 +66,7 @@ class CBF:
         h_cur = self.h_func(state)
 
         for action in action_space:
-            h_input = torch.zeros((1, self.state_size + 1))
+            h_input = torch.zeros((1, self.state_size + self.action_size))
             h_input[:, :self.state_size] = state
             h_input[:, self.state_size] = action
 

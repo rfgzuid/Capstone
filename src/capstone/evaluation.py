@@ -102,7 +102,8 @@ class Evaluator:
                 current_frame += 1
                 done = terminated or truncated
 
-            end_frames.append(current_frame)
+            if terminated:
+                end_frames.append(current_frame)
 
             agent_filter_times.append(agent_filter_time)
 
@@ -164,13 +165,20 @@ class Evaluator:
                 P_succeed *= (1 - P_u[q][t])
             P.append(1 - P_succeed)
 
+        terminal = np.zeros(self.max_frames)
+
+        for f in end_frames:
+            terminal[f-1] += 1 / N
+        P_emp = np.cumsum(terminal)
+
         terminal_cbf = np.zeros(self.max_frames)
 
         for f in cbf_end_frames:
-            terminal_cbf[f] += 1 / N
-        P_emp = np.cumsum(terminal_cbf)
+            terminal_cbf[f-1] += 1 / N
+        cbf_P_emp = np.cumsum(terminal_cbf)
 
-        p_ax.plot(P_emp, color='g')
+        p_ax.plot(cbf_P_emp, color='g')
+        p_ax.plot(P_emp, color='r')
         p_ax.plot(P, color='black', linestyle='dashed')
 
         h_fig.tight_layout()
