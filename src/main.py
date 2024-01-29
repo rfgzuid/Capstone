@@ -48,5 +48,5 @@ else:
     cbf = CBF(env, h, policy, alpha=0.9)
 
     # evaluator.play(policy)
-    evaluator.plot(policy, 0.9, 0, 10)
-    evaluator.plot(policy, 0.9, 0, 10, cbf=cbf)
+    evaluator.plot(policy, 0.9, 0.099, 10)
+    evaluator.plot(policy, 0.9, 0.099, 10, cbf=cbf)
