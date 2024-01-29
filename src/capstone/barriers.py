@@ -18,6 +18,7 @@ class NNDM_H(nn.Sequential):
             env.h_function
         )
 
+
 class stochastic_NNDM_H(nn.Sequential):
     def __init__(self, xu_inds, nndm, w_inds, h):
         super().__init__(OrderedDict([
