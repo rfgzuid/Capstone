@@ -25,6 +25,7 @@ class CBF:
                  action_partitions: int = 4, noise_partitions = 2, is_stochastic = False, stds = None, h_ids = None):
         self.env = env.env
         self.state_size = self.env.observation_space.shape[0]
+        self.action_size = self.env.action_space.shape[0]
 
         self.is_discrete = env.is_discrete
         self.settings = env.settings
@@ -156,6 +157,16 @@ class CBF:
     def continuous_cbf(self, state):
         nominal_action = self.policy(state).squeeze(0).detach()
         h_current = self.h_func(state)
+
+        h_input = torch.zeros((1, self.state_size + self.action_size))
+        h_input[:, :self.state_size] = state
+        h_input[:, self.state_size:] = nominal_action
+
+        h_next = self.NNDM_H(h_input)
+
+        if torch.all(h_next >= self.alpha * h_current + self.delta).item():
+            return nominal_action
+
         bound_matrices = self.create_bound_matrices(state)
         return self.QP_solver(nominal_action, bound_matrices, h_current)
     

@@ -79,25 +79,17 @@ class Evaluator:
                 h_tensor = self.h_function(state)
                 h_values.append(h_tensor.squeeze().numpy())
 
-                if cbf is None:
+                # try cbf action - if cbf disabled or no safe action, just follow agent policy
+                try:
+                    action = np.array(cbf.safe_action(state.squeeze()))
+                    state, reward, terminated, truncated, _ = self.env.step(action)
+                except (AttributeError, InfeasibilityError):
                     if self.is_discrete:
                         action = agent.select_action(state, exploration=False)
                         state, reward, terminated, truncated, _ = self.env.step(action.item())
                     else:
                         action = agent.select_action(state.squeeze(), exploration=False)
                         state, reward, terminated, truncated, _ = self.env.step(action.detach().numpy())
-
-                else:
-                    try:
-                        action = np.array(cbf.safe_action(state.squeeze()))
-                        state, reward, terminated, truncated, _ = self.env.step(action)
-                    except InfeasibilityError:
-                        if self.is_discrete:
-                            action = agent.select_action(state, exploration=False)
-                            state, reward, terminated, truncated, _ = self.env.step(action.item())
-                        else:
-                            action = agent.select_action(state.squeeze(), exploration=False)
-                            state, reward, terminated, truncated, _ = self.env.step(action.detach().numpy())
 
                 current_frame += 1
                 done = terminated or truncated
@@ -125,8 +117,8 @@ class Evaluator:
 
         h0 = self.h_function(torch.tensor(state).unsqueeze(0))  # get the state to tensor
         M = 1
-        gamma = 0
 
+        # gamma = 0
         for i in range(dimension_h):
             # plot the exponential decay lower bound of h_i
             h_bound = [h0[0][i].item()]
