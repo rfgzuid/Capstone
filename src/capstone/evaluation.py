@@ -135,23 +135,26 @@ class Evaluator:
 
             for run in h_values:
                 h_ax[i, 0].plot(run[:, i], color='r', alpha=0.1)
+
+            # apply the same plot scaling to the CBF plots
+            h_ax[i, 1].set_xlim(h_ax[i, 0].get_xlim())
+            h_ax[i, 1].set_ylim(h_ax[i, 0].get_ylim())
+
             for run in cbf_h_values:
                 h_ax[i, 1].plot(run[:, i], color='g', alpha=0.1)
-
-            print(h_ax[i, 1].get_xlim())
-            h_ax[i, 1].plot(h_bound, scalex=False, scaley=False, color='black', linestyle='dashed')
+            h_ax[i, 1].plot(h_bound, color='black', linestyle='dashed')
 
             p_ax[i, 0].plot(P_u_i, color='g')
 
             h_ax[i, 0].set_title("h_{}(t): Barrier function, ".format(i) + 'M')
             h_ax[i, 1].set_title("P_u_{}(t): P unsafe, specific failure mode {} ".format(i, i) + 'M')
 
-        P_u = []
+        P = []
         for t in range(self.max_frames):
             P_succeed = 1
             for q in range(dimension_h):
                 P_succeed *= (1 - P_u[q][t])
-            P_u.append(1 - P_succeed)
+            P.append(1 - P_succeed)
 
         end_frames.sort()
 
