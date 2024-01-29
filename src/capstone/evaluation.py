@@ -8,8 +8,11 @@ from .cbf import CBF, InfeasibilityError
 
 import matplotlib.pyplot as plt
 import numpy as np
+import time
+import statistics
 
 from tqdm import tqdm
+
 
 
 class Evaluator:
@@ -65,11 +68,13 @@ class Evaluator:
         """
         h_values_all_runs = []
         end_frames = []
+        agent_filter_times = []
 
         for i in tqdm(range(num_agents)):
             h_values = []
             state, _ = self.env.reset(seed=seed)
 
+            agent_filter_time = 0
             current_frame = 0
             done = False
 
@@ -81,8 +86,11 @@ class Evaluator:
 
                 # try cbf action - if cbf disabled or no safe action, just follow agent policy
                 try:
+                    start_time = time.time()
                     action = np.array(cbf.safe_action(state.squeeze()))
                     state, reward, terminated, truncated, _ = self.env.step(action)
+                    end_time = time.time()
+                    agent_filter_time += end_time - start_time
                 except (AttributeError, InfeasibilityError):
                     if self.is_discrete:
                         action = agent.select_action(state, exploration=False)
@@ -96,11 +104,13 @@ class Evaluator:
 
             end_frames.append(current_frame)
 
+            agent_filter_times.append(agent_filter_time)
+
             h_values_all_runs.append(np.array(h_values))
 
-        return end_frames, h_values_all_runs
+        return end_frames, h_values_all_runs, agent_filter_times
 
-    def plot(self, agent, cbf: CBF, N: int):  # N is the number of experiments
+    def plot(self, agent, cbf: CBF, N: int):  # N is the number of agents or experiments
         state, _ = self.env.reset(seed=42)  # this is the initial state
         dimension_h = self.h_function(torch.tensor(state).unsqueeze(0)).shape[1]  # how many h_i do you have
 
@@ -108,10 +118,16 @@ class Evaluator:
         p_fig, p_ax = plt.subplots()
 
         print('Simulating agents without CBF')
-        end_frames, h_values = self.mc_simulate(agent, N, 42, cbf=None)  # what you get from the simulation
+        end_frames, h_values, agent_filter_times = self.mc_simulate(agent, N, 42, cbf=None)
+        mean_filter_time = sum(agent_filter_times) / len(agent_filter_times)
+        std = statistics.stdev(agent_filter_times)
+        print(f'The mean CBF filter time for one agent is: {mean_filter_time:.2f}, the standard deviation is {std:.2f}')
 
         print('Simulating agents with CBF')
-        cbf_end_frames, cbf_h_values = self.mc_simulate(agent, N, 42, cbf=cbf)
+        cbf_end_frames, cbf_h_values, agent_filter_times = self.mc_simulate(agent, N, 42, cbf=cbf)
+        mean_filter_time = statistics.mean(agent_filter_times)
+        std = statistics.stdev(agent_filter_times)
+        print(f'The mean CBF filter time for one agent is: {mean_filter_time:.2f}, the standard deviation is {std:.2f}')
 
         P_u = []
 
