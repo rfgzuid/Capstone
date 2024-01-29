@@ -92,7 +92,12 @@ class Evaluator:
                         action = np.array(cbf.safe_action(state.squeeze()))
                         state, reward, terminated, truncated, _ = self.env.step(action)
                     except InfeasibilityError:
-                        terminated = True
+                        if self.is_discrete:
+                            action = agent.select_action(state, exploration=False)
+                            state, reward, terminated, truncated, _ = self.env.step(action.item())
+                        else:
+                            action = agent.select_action(state.squeeze(), exploration=False)
+                            state, reward, terminated, truncated, _ = self.env.step(action.detach().numpy())
 
                 current_frame += 1
                 done = terminated or truncated
@@ -107,8 +112,8 @@ class Evaluator:
         state, _ = self.env.reset(seed=42)  # this is the initial state
         dimension_h = self.h_function(torch.tensor(state).unsqueeze(0)).shape[1]  # how many h_i do you have
 
-        h_fig, h_ax = plt.subplots(dimension_h, 2)  # first col for h_i, second col for p_ui
-        p_fig, p_ax = plt.subplots(dimension_h, 2)
+        h_fig, h_ax = plt.subplots(dimension_h, 2)  # second col with cbf
+        p_fig, p_ax = plt.subplots()
 
         print('Simulating agents without CBF')
         end_frames, h_values = self.mc_simulate(agent, N, 42, cbf=None)  # what you get from the simulation
@@ -128,10 +133,10 @@ class Evaluator:
             h_bound.extend([h0[0][i].item() * cbf.alpha[i].item() ** (t+1) + cbf.delta[i].item()
                             for t in range(self.max_frames)])
 
-            P_u_i = [1 - (h0[0][i].item() / M) *
+            P_bound = [1 - (h0[0][i].item() / M) *
                      ((M * cbf.alpha[i].item() + cbf.delta[i].item()) / M) ** t
                      for t in range(self.max_frames)]
-            P_u.append(P_u_i)
+            P_u.append(P_bound)
 
             for run in h_values:
                 h_ax[i, 0].plot(run[:, i], color='r', alpha=0.1)
@@ -144,11 +149,6 @@ class Evaluator:
                 h_ax[i, 1].plot(run[:, i], color='g', alpha=0.1)
             h_ax[i, 1].plot(h_bound, color='black', linestyle='dashed')
 
-            p_ax[i, 0].plot(P_u_i, color='g')
-
-            h_ax[i, 0].set_title("h_{}(t): Barrier function, ".format(i) + 'M')
-            h_ax[i, 1].set_title("P_u_{}(t): P unsafe, specific failure mode {} ".format(i, i) + 'M')
-
         P = []
         for t in range(self.max_frames):
             P_succeed = 1
@@ -156,17 +156,15 @@ class Evaluator:
                 P_succeed *= (1 - P_u[q][t])
             P.append(1 - P_succeed)
 
-        end_frames.sort()
+        terminal_cbf = np.zeros(self.max_frames)
 
-        P_u_emp = []
+        for f in cbf_end_frames:
+            terminal_cbf[f] += 1 / N
+        P_emp = np.cumsum(terminal_cbf)
 
-        for t in range(self.max_frames):
-            counter = 0
-            for frame in end_frames:
-                if frame <= t:
-                    counter += 1
-            counter = counter / N
-            P_u_emp.append(counter)
+        p_ax.plot(P_emp, color='g')
+        p_ax.plot(P, color='black', linestyle='dashed')
 
         h_fig.tight_layout()
+        p_fig.tight_layout()
         plt.show()
