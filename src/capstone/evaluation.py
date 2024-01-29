@@ -9,6 +9,8 @@ from .cbf import CBF, InfeasibilityError
 import matplotlib.pyplot as plt
 import numpy as np
 
+from tqdm import tqdm
+
 
 class Evaluator:
     def __init__(self, env: Env) -> None:
@@ -64,7 +66,7 @@ class Evaluator:
         h_values_all_runs = []
         end_frames = []
 
-        for i in range(num_agents):
+        for i in tqdm(range(num_agents)):
             h_values = []
             state, _ = self.env.reset(seed=seed)
 
@@ -101,35 +103,44 @@ class Evaluator:
 
         return end_frames, h_values_all_runs
 
-    def plot(self, agent, alpha, delta, N, cbf: CBF = None):  # N is the number of experiments
+    def plot(self, agent, cbf: CBF, N: int):  # N is the number of experiments
         state, _ = self.env.reset(seed=42)  # this is the initial state
         dimension_h = self.h_function(torch.tensor(state).unsqueeze(0)).shape[1]  # how many h_i do you have
 
-        fig1, ax1 = plt.subplots(dimension_h, 2)  # first col for h_i, second col for p_ui
+        h_fig, h_ax = plt.subplots(dimension_h, 2)  # first col for h_i, second col for p_ui
+        p_fig, p_ax = plt.subplots(dimension_h, 2)
 
-        color = 'r' if cbf is None else 'g'
+        print('Simulating agents without CBF')
+        end_frames, h_values = self.mc_simulate(agent, N, 42, cbf=None)  # what you get from the simulation
 
-        end_frames, all_h_values = self.mc_simulate(agent, N, 42, cbf=cbf)  # what you get from the simulation
+        print('Simulating agents with CBF')
+        cbf_end_frames, cbf_h_values = self.mc_simulate(agent, N, 42, cbf=cbf)
 
         P_u_lst = []
+
+        h0 = self.h_function(torch.tensor(state).unsqueeze(0))  # get the state to tensor
         M = 1
+        gamma = 0
 
         for i in range(dimension_h):
-            x = range(self.max_frames)
-            h0 = self.h_function(torch.tensor(state).unsqueeze(0))  # get the state to tensor
+            # plot the exponential decay lower bound of h_i
+            h_bound = [h0[0][i].item() * cbf.alpha[i].item()**t for t in range(self.max_frames)]
 
-            P_u_i_lst = [1 - (h0[0][i].item() / M) * ((M * alpha + delta) / M) ** t
-                         for t in range(self.max_frames)]
-            P_u_lst.append(P_u_i_lst)
+            P_u_i = [1 - (h0[0][i].item() / M) *
+                     ((M * cbf.alpha[i].item() + cbf.delta[i].item()) / M) ** t
+                     for t in range(self.max_frames)]
+            P_u_lst.append(P_u_i)
 
-            for run in all_h_values:
-                # h_i_plot
-                ax1[i, 0].plot(run[:, i], color=color, alpha=0.1)
+            for run in h_values:
+                h_ax[i, 0].plot(run[:, i], color='r', alpha=0.1)
+            for run in cbf_h_values:
+                h_ax[i, 1].plot(run[:, i], color='g', alpha=0.1)
+                h_ax[i, 1].plot(h_bound, color='black', linestyle='dashed')
 
-                ax1[i, 0].set_title("h_{}(t): Barier function, ".format(i) + 'M')
-                ax1[i, 1].plot(x, P_u_i_lst, color=color)
+            p_ax[i, 0].plot(P_u_i, color='g')
 
-                ax1[i, 1].set_title("P_u_{}(t): P unsafe, specific failure mode {} ".format(i, i) + 'M')
+            h_ax[i, 0].set_title("h_{}(t): Barrier function, ".format(i) + 'M')
+            h_ax[i, 1].set_title("P_u_{}(t): P unsafe, specific failure mode {} ".format(i, i) + 'M')
 
         P_u = []
         for t in range(self.max_frames):
@@ -150,12 +161,5 @@ class Evaluator:
             counter = counter / N
             P_u_emp.append(counter)
 
-        fig2, ax2 = plt.subplots()
-
-        ax2.plot(range(self.max_frames), P_u, label="Theoretical P_unsafe", color=color)
-        ax2.plot(range(self.max_frames), P_u_emp, color='blue', label="Empirical P_unsafe")
-        ax2.set_title(f"P unsafe combined, CBF")
-        ax2.legend(loc='lower right')
-
-        fig1.tight_layout()
+        h_fig.tight_layout()
         plt.show()

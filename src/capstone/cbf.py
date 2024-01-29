@@ -63,7 +63,6 @@ class CBF:
         safe_actions = []
 
         h_cur = self.h_func(state)
-        print(h_cur)
 
         for action in action_space:
             h_input = torch.zeros((1, self.state_size + 1))
