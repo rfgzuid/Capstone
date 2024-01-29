@@ -119,7 +119,7 @@ class Evaluator:
 
         print('Simulating agents without CBF')
         end_frames, h_values, agent_filter_times = self.mc_simulate(agent, N, 42, cbf=None)
-        mean_filter_time = sum(agent_filter_times) / len(agent_filter_times)
+        mean_filter_time = statistics.mean(agent_filter_times)
         std = statistics.stdev(agent_filter_times)
         print(f'The mean CBF filter time for one agent is: {mean_filter_time:.2f}, the standard deviation is {std:.2f}')
 
