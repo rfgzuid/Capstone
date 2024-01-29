@@ -181,9 +181,14 @@ class CBF:
             # Objective
             objective = cp.Minimize(cp.norm(action - nominal_action, 2))
 
-            # Solve the problem
+            # Solve the problem, using SCS as the default solver
             problem = cp.Problem(objective, constraints)
-            problem.solve(solver='ECOS')
+            problem.solve(solver='SCS')
+
+            # If the status is inaccurate, then change to ECOS
+            if problem.status == 'inaccurate':
+                problem = cp.Problem(objective, constraints)
+                problem.solve(solver='ECOS')
 
             if problem.status is cp.UNBOUNDED:
                 print("something goes very wrong")
