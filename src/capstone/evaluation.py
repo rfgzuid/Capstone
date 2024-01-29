@@ -93,7 +93,7 @@ class Evaluator:
                         terminated = True
 
                 current_frame += 1
-                done = truncated or terminated
+                done = terminated or truncated
 
             end_frames.append(current_frame)
 
@@ -101,21 +101,21 @@ class Evaluator:
 
         return end_frames, h_values_all_runs
 
-    def plot(self, agent, alpha, delta, N, M, cbf: CBF = None): # N is the number of experiments
-        s_knot, _ = self.env.reset(seed=42) # this is the initial state
+    def plot(self, agent, alpha, delta, N, M, cbf: CBF = None):
+        state, _ = self.env.reset(seed=42)
         end_frames, all_h_values = self.mc_simulate(agent, N, 42, cbf) # what you get from the simulation
 
-        dimension_h = self.h_function(torch.tensor(s_knot).unsqueeze(0)).shape[1] # how many h_i do you have
+        dimension_h = self.h_function(torch.tensor(state).unsqueeze(0)).shape[1] # how many h_i do you have
         fig, axs = plt.subplots(dimension_h, 3) # first col for h, second col for p_ui, third for p_u
 
         P_u_lst = []
 
         for i in range(dimension_h):
             x = range(self.max_frames)
-            h_s_knot = self.h_function(torch.tensor(s_knot).unsqueeze(0)) # get the state to tensor
+            h = self.h_function(torch.tensor(state).unsqueeze(0)) # get the state to tensor
             P_u_i_lst = []
             for t in range(self.max_frames):
-                P_u_i_lst.append(1 - (h_s_knot[0][i].item() / M) * ((M * alpha + delta) / M) ** t)
+                P_u_i_lst.append(1 - (h[0][i].item() / M) * ((M * alpha + delta) / M) ** t)
             P_u_lst.append(P_u_i_lst)
 
             for run in all_h_values:
@@ -145,6 +145,6 @@ class Evaluator:
             counter = counter / N
             P_u_emp.append(counter)
         axs[0, 2].plot(range(self.max_frames), P_u_emp)
-        axs[1, 2].plot(range(self.max_frames), P_u_emp, color = "orange")
+        axs[1, 2].plot(range(self.max_frames), P_u_emp, color="orange")
 
         plt.show()
