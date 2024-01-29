@@ -101,51 +101,90 @@ class Evaluator:
 
         return end_frames, h_values_all_runs
 
-    def plot(self, agent, alpha, delta, N, M, cbf: CBF = None):
-        state, _ = self.env.reset(seed=42)
-        end_frames, all_h_values = self.mc_simulate(agent, N, 42, cbf) # what you get from the simulation
+    def plot(self, agent, alpha, delta, N, M, cbf: CBF = None):  # N is the number of experiments
+        s_knot, _ = self.env.reset(seed=42)  # this is the initial state
+        dimension_h = self.h_function(torch.tensor(s_knot).unsqueeze(0)).shape[1]  # how many h_i do you have
 
-        dimension_h = self.h_function(torch.tensor(state).unsqueeze(0)).shape[1] # how many h_i do you have
-        fig, axs = plt.subplots(dimension_h, 3) # first col for h, second col for p_ui, third for p_u
+        # without cbf
+        fig1, axs1 = plt.subplots(dimension_h, 2)  # first col for h_i, second col for p_ui
+        fig2, axs2 = plt.subplots()  # combined P_u plot, theoretical and empirical (emp: orange)
 
-        P_u_lst = []
+        # with cbf
+        fig3, axs3 = plt.subplots(dimension_h, 2)  # first col for h_i, second col for p_ui
+        fig4, axs4 = plt.subplots()  # combined P_u plot, theoretical and empirical (emp: orange)
 
-        for i in range(dimension_h):
-            x = range(self.max_frames)
-            h = self.h_function(torch.tensor(state).unsqueeze(0)) # get the state to tensor
-            P_u_i_lst = []
+        for l in range(2):
+            if l == 0:
+                T = True
+                title = "no CBF"
+                col = "red"
+                end_frames, all_h_values = self.mc_simulate(agent, N, 42)  # what you get from the simulation
+            elif l == 1:
+                T = False
+                title = 'with CBF'
+                col = "green"
+                end_frames, all_h_values = self.mc_simulate(agent, N, 42,
+                                                            cbf)  # what you get from the simulation
+
+            P_u_lst = []
+
+            for i in range(dimension_h):
+                x = range(self.max_frames)
+                h_s_knot = self.h_function(torch.tensor(s_knot).unsqueeze(0))  # get the state to tensor
+                P_u_i_lst = []
+                for t in range(self.max_frames):
+                    P_u_i_lst.append(1 - (h_s_knot[0][i].item() / M) * ((M * alpha + delta) / M) ** t)
+                P_u_lst.append(P_u_i_lst)
+
+                for run in all_h_values:
+                    # h_i_plot
+                    if l == 0:
+                        axs1[i, 0].plot(run[:, i], color=col, alpha=0.1)
+                    if l == 1:
+                        axs3[i, 0].plot(run[:, i], color=col, alpha=0.1)
+
+                    # p_u_i plot
+
+                if T:
+                    axs1[i, 0].set_title("h_{}(t): Barier function, ".format(i) + title)
+                    axs1[i, 1].plot(x, P_u_i_lst, color=col)
+                else:
+                    axs3[i, 0].set_title("h_{}(t): Barier function, ".format(i) + title)
+                    axs3[i, 1].plot(x, P_u_i_lst, color=col)
+
+                if T:
+                    axs1[i, 1].set_title("P_u_{}(t): P unsafe, specific failure mode {} ".format(i, i) + title)
+                else:
+                    axs3[i, 1].set_title("P_u_{}(t): P unsafe, specific failure mode {} ".format(i, i) + title)
+
+            P_u = []
             for t in range(self.max_frames):
-                P_u_i_lst.append(1 - (h[0][i].item() / M) * ((M * alpha + delta) / M) ** t)
-            P_u_lst.append(P_u_i_lst)
+                P_succeed = 1
+                for q in range(dimension_h):
+                    P_succeed *= (1 - P_u_lst[q][t])
+                P_u.append(1 - P_succeed)
 
-            for run in all_h_values:
-                # h_i_plot
-                axs[i, 0].plot(run[:, i], 'r', alpha=0.1)
-                # p_u_i plot
-            axs[i, 1].plot(x, P_u_i_lst)
+            end_frames.sort()
 
-        P_u = []
-        for t in range(self.max_frames):
-            P_succeed = 1
-            for q in range(dimension_h):
-                P_succeed *= (1-P_u_lst[q][t])
-            P_u.append(1 - P_succeed)
+            P_u_emp = []
 
-        axs[0, 2].plot(range(self.max_frames), P_u)
+            for t in range(self.max_frames):
+                counter = 0
+                for frame in end_frames:
+                    if frame <= t:
+                        counter += 1
+                counter = counter / N
+                P_u_emp.append(counter)
 
-        end_frames.sort()
+            if T:
+                axs2.plot(range(self.max_frames), P_u, label="Theoretical P_unsafe", color=col)
+                axs2.plot(range(self.max_frames), P_u_emp, color='blue', label="Empirical P_unsafe")
+                axs2.set_title("P unsafe combined" + title)
+                axs2.legend(loc='lower right')
+            else:
+                axs4.plot(range(self.max_frames), P_u, label="Theoretical P_unsafe", color=col)
+                axs4.plot(range(self.max_frames), P_u_emp, color='blue', label="Empirical P_unsafe")
+                axs4.set_title("P unsafe combined" + title)
+                axs4.legend(loc='lower right')
 
-        P_u_emp = []
-
-        for t in range(self.max_frames):
-            counter = 0
-            for frame in end_frames:
-                if frame <= t:
-                    counter += 1
-            counter = counter / N
-            P_u_emp.append(counter)
-        axs[0, 2].plot(range(self.max_frames), P_u_emp)
-        axs[1, 2].plot(range(self.max_frames), P_u_emp, color="orange")
-
-        fig.tight_layout()
         plt.show()
