@@ -116,7 +116,7 @@ class Evaluator:
         print('Simulating agents with CBF')
         cbf_end_frames, cbf_h_values = self.mc_simulate(agent, N, 42, cbf=cbf)
 
-        P_u_lst = []
+        P_u = []
 
         h0 = self.h_function(torch.tensor(state).unsqueeze(0))  # get the state to tensor
         M = 1
@@ -124,18 +124,22 @@ class Evaluator:
 
         for i in range(dimension_h):
             # plot the exponential decay lower bound of h_i
-            h_bound = [h0[0][i].item() * cbf.alpha[i].item()**t for t in range(self.max_frames)]
+            h_bound = [h0[0][i].item()]
+            h_bound.extend([h0[0][i].item() * cbf.alpha[i].item() ** (t+1) + cbf.delta[i].item()
+                            for t in range(self.max_frames)])
 
             P_u_i = [1 - (h0[0][i].item() / M) *
                      ((M * cbf.alpha[i].item() + cbf.delta[i].item()) / M) ** t
                      for t in range(self.max_frames)]
-            P_u_lst.append(P_u_i)
+            P_u.append(P_u_i)
 
             for run in h_values:
                 h_ax[i, 0].plot(run[:, i], color='r', alpha=0.1)
             for run in cbf_h_values:
                 h_ax[i, 1].plot(run[:, i], color='g', alpha=0.1)
-                h_ax[i, 1].plot(h_bound, color='black', linestyle='dashed')
+
+            print(h_ax[i, 1].get_xlim())
+            h_ax[i, 1].plot(h_bound, scalex=False, scaley=False, color='black', linestyle='dashed')
 
             p_ax[i, 0].plot(P_u_i, color='g')
 
@@ -146,7 +150,7 @@ class Evaluator:
         for t in range(self.max_frames):
             P_succeed = 1
             for q in range(dimension_h):
-                P_succeed *= (1 - P_u_lst[q][t])
+                P_succeed *= (1 - P_u[q][t])
             P_u.append(1 - P_succeed)
 
         end_frames.sort()
