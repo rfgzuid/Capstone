@@ -21,8 +21,8 @@ class InfeasibilityError(Exception):
 
 
 class CBF:
-    def __init__(self, env: Env, nndm_h: NNDM_H, policy: DQN | Actor, alpha: float, action_partitions: int = 4, 
-                 noise_partitions = 2, is_stochastic = False, stds = None, h_ids = None):
+    def __init__(self, env: Env, nndm_h: NNDM_H, policy: DQN | Actor, alpha: list[float], delta: list[float],
+                 action_partitions: int = 4, noise_partitions = 2, is_stochastic = False, stds = None, h_ids = None):
         self.env = env.env
         self.state_size = self.env.observation_space.shape[0]
 
@@ -33,7 +33,9 @@ class CBF:
         self.is_stochastic = is_stochastic
         self.NNDM_H = nndm_h
         self.policy = policy
-        self.alpha = alpha
+
+        self.alpha = torch.tensor(alpha)
+        self.delta = torch.tensor(delta)
 
         if not self.is_discrete:
             factory = BoundModelFactory()
@@ -46,7 +48,6 @@ class CBF:
                 self.h_ids = h_ids # TODO: need to be moved to settings
                 self.noise_partitions = noise_partitions
                 self.stds = stds # TODO: need to be moved need to be moved to settings
-
 
     def safe_action(self, state: torch.tensor):
         if self.is_discrete:
@@ -62,6 +63,7 @@ class CBF:
         safe_actions = []
 
         h_cur = self.h_func(state)
+        print(h_cur)
 
         for action in action_space:
             h_input = torch.zeros((1, self.state_size + 1))
@@ -70,7 +72,7 @@ class CBF:
 
             h_next = self.NNDM_H(h_input)
 
-            if torch.all(h_next >= self.alpha * h_cur).item():
+            if torch.all(h_next >= self.alpha * h_cur + self.delta).item():
                 safe_actions.append(action)
 
         if safe_actions and len(safe_actions) > 1:
@@ -174,7 +176,7 @@ class CBF:
             action_lower_bound = action_partition.lower.reshape((-1,))
             action_upper_bound = action_partition.upper.reshape((-1,))
             constraints = [action_lower_bound <= action, action <= action_upper_bound,
-                           h_action_dependent @ action + h_vec >= self.alpha * h_current]
+                           h_action_dependent @ action + h_vec >= self.alpha * h_current + self.delta]
 
             # Objective
             objective = cp.Minimize(cp.norm(action - nominal_action, 2))

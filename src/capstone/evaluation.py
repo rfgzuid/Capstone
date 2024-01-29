@@ -105,7 +105,7 @@ class Evaluator:
         state, _ = self.env.reset(seed=42)  # this is the initial state
         dimension_h = self.h_function(torch.tensor(state).unsqueeze(0)).shape[1]  # how many h_i do you have
 
-        fig, ax = plt.subplots(dimension_h, 2)  # first col for h_i, second col for p_ui
+        fig1, ax1 = plt.subplots(dimension_h, 2)  # first col for h_i, second col for p_ui
 
         color = 'r' if cbf is None else 'g'
 
@@ -124,12 +124,12 @@ class Evaluator:
 
             for run in all_h_values:
                 # h_i_plot
-                ax[i, 0].plot(run[:, i], color=color, alpha=0.1)
+                ax1[i, 0].plot(run[:, i], color=color, alpha=0.1)
 
-                ax[i, 0].set_title("h_{}(t): Barier function, ".format(i) + 'M')
-                ax[i, 1].plot(x, P_u_i_lst, color=color)
+                ax1[i, 0].set_title("h_{}(t): Barier function, ".format(i) + 'M')
+                ax1[i, 1].plot(x, P_u_i_lst, color=color)
 
-                ax[i, 1].set_title("P_u_{}(t): P unsafe, specific failure mode {} ".format(i, i) + 'M')
+                ax1[i, 1].set_title("P_u_{}(t): P unsafe, specific failure mode {} ".format(i, i) + 'M')
 
         P_u = []
         for t in range(self.max_frames):
@@ -150,10 +150,12 @@ class Evaluator:
             counter = counter / N
             P_u_emp.append(counter)
 
-        plt.plot(range(self.max_frames), P_u, label="Theoretical P_unsafe", color=color)
-        plt.plot(range(self.max_frames), P_u_emp, color='blue', label="Empirical P_unsafe")
-        plt.title(f"P unsafe combined, CBF")
-        plt.legend(loc='lower right')
+        fig2, ax2 = plt.subplots()
 
-        fig.tight_layout()
+        ax2.plot(range(self.max_frames), P_u, label="Theoretical P_unsafe", color=color)
+        ax2.plot(range(self.max_frames), P_u_emp, color='blue', label="Empirical P_unsafe")
+        ax2.set_title(f"P unsafe combined, CBF")
+        ax2.legend(loc='lower right')
+
+        fig1.tight_layout()
         plt.show()

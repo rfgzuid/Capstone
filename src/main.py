@@ -45,8 +45,8 @@ else:
     evaluator = Evaluator(env)
 
     h = NNDM_H(env, nndm)
-    cbf = CBF(env, h, policy, alpha=0.9)
+    cbf = CBF(env, h, policy, alpha=[0.9, 0.5], delta=[0.05, 0.05])
 
     # evaluator.play(policy)
-    evaluator.plot(policy, 0.9, 0.099, 10)
+    evaluator.plot(policy, 0.9, 0.099, 10, cbf=None)
     evaluator.plot(policy, 0.9, 0.099, 10, cbf=cbf)
