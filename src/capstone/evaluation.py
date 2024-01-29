@@ -147,4 +147,5 @@ class Evaluator:
         axs[0, 2].plot(range(self.max_frames), P_u_emp)
         axs[1, 2].plot(range(self.max_frames), P_u_emp, color="orange")
 
+        fig.tight_layout()
         plt.show()
