@@ -10,6 +10,7 @@ import torch
 import cvxpy as cp
 from collections.abc import Iterable
 from itertools import product
+import numpy as np
 
 
 class InfeasibilityError(Exception):
@@ -203,9 +204,9 @@ class CBF:
                 safe_actions.append((action.value, objective.value))
 
         if safe_actions and len(safe_actions) > 1:
-            return torch.tensor(min(safe_actions, key=lambda x: x[1], default=(None, None))[0])
+            return np.array(min(safe_actions, key=lambda x: x[1], default=(None, None))[0])
         elif safe_actions:
-            return torch.tensor(safe_actions[0][0])
+            return np.array(safe_actions[0][0])
         else:
             raise InfeasibilityError()
         

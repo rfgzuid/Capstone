@@ -86,11 +86,22 @@ class Evaluator:
 
                 # try cbf action - if cbf disabled or no safe action, just follow agent policy
                 try:
-                    start_time = time.time()
-                    action = np.array(cbf.safe_action(state.squeeze()))
-                    state, reward, terminated, truncated, _ = self.env.step(action)
-                    end_time = time.time()
-                    agent_filter_time += end_time - start_time
+                    # start_time = time.time()
+
+                    cbf_action = cbf.safe_action(state.squeeze())
+                    print('CBF', cbf_action)
+
+                    if self.is_discrete:
+                        action = agent.select_action(state, exploration=False)
+                    else:
+                        action = agent.select_action(state.squeeze(), exploration=False)
+
+                    print('No CBF', action, '\n')
+
+                    state, reward, terminated, truncated, _ = self.env.step(cbf_action)
+
+                    # end_time = time.time()
+                    # agent_filter_time += end_time - start_time
                 except (AttributeError, InfeasibilityError):
                     if self.is_discrete:
                         action = agent.select_action(state, exploration=False)
