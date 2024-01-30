@@ -23,7 +23,7 @@ def weighted_noise_prob(HR, h_ids, stds):
     res = torch.tensor(len(h_ids))
     HR_prob = HR_probability(HR, h_ids, stds)
     for i in range(len(h_ids)):
-        print(""HR_prob * truncated_normal_expectation(0, stds[i], HR.lower[:, i], HR.upper[:, i]))
+        print("oeps", HR_prob * truncated_normal_expectation(0, stds[i], HR.lower[:, i], HR.upper[:, i]))
         res[i] = HR_prob * truncated_normal_expectation(0, stds[i], HR.lower[:, i], HR.upper[:, i])
     return res
 
