@@ -64,7 +64,7 @@ class Evaluator:
         end_frames = []
         agent_filter_times = []
 
-        for i in tqdm(range(num_agents)):
+        for _ in tqdm(range(num_agents)):
             h_values = []
             state, _ = self.env.reset(seed=seed)
 
