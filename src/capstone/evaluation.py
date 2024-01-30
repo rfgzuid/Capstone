@@ -47,10 +47,7 @@ class Evaluator:
             else:
                 action = cbf.safe_action(state)
 
-            if self.is_discrete:
-                state, reward, terminated, _, _ = play_env.step(action.item())
-            else:
-                state, reward, terminated, _, _ = play_env.step(action.squeeze().detach().numpy())
+            state, reward, terminated, _, _ = play_env.step(action.squeeze().detach().numpy())
 
             if terminated:
                 break
@@ -85,18 +82,18 @@ class Evaluator:
                 try:
                     # start_time = time.time()
 
-                    cbf_action = cbf.safe_action(state.squeeze())
+                    cbf_action = cbf.safe_action(state)
 
                     if self.is_discrete:
                         action = agent.select_action(state, exploration=False)
                     else:
-                        action = agent.select_action(state.squeeze(), exploration=False)
+                        action = agent.select_action(state, exploration=False)
                         action = action.detach()
 
-                    if not torch.all(action == cbf_action):
-                        print(action, cbf_action)
+                    # if not torch.all(action == cbf_action):
+                        # print(action, cbf_action)
 
-                    state, reward, terminated, truncated, _ = self.env.step(cbf_action.detach().numpy())
+                    state, reward, terminated, truncated, _ = self.env.step(cbf_action.squeeze().detach().numpy())
 
                     # end_time = time.time()
                     # agent_filter_time += end_time - start_time

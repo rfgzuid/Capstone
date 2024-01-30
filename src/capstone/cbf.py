@@ -64,7 +64,7 @@ class CBF:
 
     def agent_safe(self, state):
         h_cur = self.h_func(state)
-        action = self.policy(state)
+        action = self.policy.select_action(state, exploration=False)
 
         h_input = torch.zeros((1, self.state_size + self.action_size))
         h_input[:, :self.state_size] = state
