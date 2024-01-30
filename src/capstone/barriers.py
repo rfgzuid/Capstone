@@ -20,7 +20,7 @@ class NNDM_H(nn.Sequential):
 
 
 class stochastic_NNDM_H(nn.Sequential):
-    def __init__(self, xu_inds, nndm, w_inds, h):
+    def __init__(self, env: Env, nndm: NNDM, xu_inds, w_inds):
         super().__init__(OrderedDict([
             ('nndm(x, y) + w', Add(
                 nn.Sequential(
@@ -29,5 +29,5 @@ class stochastic_NNDM_H(nn.Sequential):
                 ),
                 Select(w_inds)  # Select w from input hyperrectangle
             )),  # The output of Add is nndm(x, u) + w
-            ('h', h)  # Feed through h
+            ('h', env.h_function)  # Feed through h
         ]))

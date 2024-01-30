@@ -42,10 +42,10 @@ else:
     nndm_params = torch.load(f'../models/NNDMs/{type(env).__name__}')
     nndm.load_state_dict(nndm_params)
 
-    evaluator = Evaluator(env)
-
     h = NNDM_H(env, nndm)
-    cbf = CBF(env, h, policy, alpha=[0.5, 0.5], delta=[0., 0.])
+    cbf = CBF(env, h, policy, alpha=[0.5, 0.5], delta=[0.6, 0.])
+
+    evaluator = Evaluator(env, cbf)
 
     # evaluator.play(policy)
     evaluator.plot(policy, cbf, 10)

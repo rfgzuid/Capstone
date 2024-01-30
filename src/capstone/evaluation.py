@@ -16,13 +16,14 @@ from tqdm import tqdm
 
 
 class Evaluator:
-    def __init__(self, env: Env) -> None:
+    def __init__(self, env: Env, cbf: CBF) -> None:
         self.env = env.env
         self.is_discrete = env.is_discrete
 
         self.max_frames = env.settings['max_frames']
         self.noise = env.settings['noise']
 
+        self.cbf = cbf
         self.h_function = env.h_function
 
     def play(self, agent, cbf: CBF = None):

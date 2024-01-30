@@ -33,10 +33,16 @@ class CBF:
 
         self.is_stochastic = is_stochastic
         self.NNDM_H = nndm_h
+        print(self.NNDM_H)
         self.policy = policy
 
         self.alpha = torch.tensor(alpha)
         self.delta = torch.tensor(delta)
+
+        if len(self.alpha) != self.action_size or len(self.delta) != self.action_size:
+            raise ValueError("Wrong sizes of alpha and/or delta")
+        if not torch.all(self.delta <= (1 - self.alpha)):
+            raise ValueError("Delta value(s) too large")
 
         if not self.is_discrete:
             factory = BoundModelFactory()
