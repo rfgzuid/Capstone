@@ -54,61 +54,48 @@ class Evaluator:
 
         play_env.close()  # close the simulation environment
 
-    def mc_simulate(self, agent, num_agents, seed=42, cbf: CBF = None):
+    def mc_simulate(self, agent, num_agents, cbf: CBF = None):
         """
         Run a Monte Carlo simulation of [num_agents] agents
          - Returns a list of all the termination/truncation frames
         This allows to numerically estimate the Exit Probability
         """
-        h_values_all_runs = []
-        end_frames = []
-        agent_filter_times = []
+        h_values = []
+        unsafe_frames = []
 
         for _ in tqdm(range(num_agents)):
-            h_values = []
-            state, _ = self.env.reset(seed=seed)
+            h_list = []
+            state, _ = self.env.reset(seed=42)
+            state = torch.tensor(state).unsqueeze(0)
 
-            agent_filter_time = 0
             current_frame = 0
             done = False
 
             while not done:
+                h_tensor = self.h_function(state)
+                h_list.append(h_tensor.squeeze().numpy())
+
+                # try cbf action - if cbf disabled or no safe actions available, just follow agent policy
+                try:
+                    action = cbf.safe_action(state)
+                except (AttributeError, InfeasibilityError):
+                    action = agent.select_action(state, exploration=False)
+
+                state, reward, terminated, truncated, _ = self.env.step(action.squeeze().detach().numpy())
                 state = torch.tensor(state).unsqueeze(0)
 
-                h_tensor = self.h_function(state)
-                h_values.append(h_tensor.squeeze().numpy())
-
-                # try cbf action - if cbf disabled or no safe actions, just follow agent policy
-                try:
-                    # start_time = time.time()
-
-                    cbf_action = cbf.safe_action(state)
-                    state, reward, terminated, truncated, _ = self.env.step(cbf_action.squeeze().detach().numpy())
-
-                    # end_time = time.time()
-                    # agent_filter_time += end_time - start_time
-                except (AttributeError, InfeasibilityError):
-                    # no cbf enabled or infeasibility error, use agent action
-                    if self.is_discrete:
-                        action = agent.select_action(state, exploration=False)
-                        state, reward, terminated, truncated, _ = self.env.step(action.item())
-                    else:
-                        action = agent.select_action(state.squeeze(), exploration=False)
-                        state, reward, terminated, truncated, _ = self.env.step(action.detach().numpy())
-
                 current_frame += 1
+
+                if torch.any(self.h_function(state.unsqueeze(0)) < 0).item():
+                    unsafe_frames.append(current_frame)
+                    terminated = True
+
                 done = terminated or truncated
 
-            if terminated:
-                end_frames.append(current_frame)
+            h_values.append(np.array(h_list))
+        return unsafe_frames, h_values
 
-            agent_filter_times.append(agent_filter_time)
-
-            h_values_all_runs.append(np.array(h_values))
-
-        return end_frames, h_values_all_runs, agent_filter_times
-
-    def plot(self, agent, N: int):
+    def plot(self, agent, n: int):
         state, _ = self.env.reset(seed=42)  # set the initial state for all agents
         dimension_h = self.h_function(torch.tensor(state).unsqueeze(0)).shape[1]  # how many h_i do you have
 
@@ -116,16 +103,9 @@ class Evaluator:
         p_fig, p_ax = plt.subplots()
 
         print('Simulating agents without CBF')
-        end_frames, h_values, agent_filter_times = self.mc_simulate(agent, N, 42, cbf=None)
-        mean_filter_time = statistics.mean(agent_filter_times)
-        std = statistics.stdev(agent_filter_times)
-        print(f'The mean CBF filter time for one agent is: {mean_filter_time:.2f}, the standard deviation is {std:.2f}')
-
+        end_frames, h_values = self.mc_simulate(agent, n, cbf=None)
         print('Simulating agents with CBF')
-        cbf_end_frames, cbf_h_values, agent_filter_times = self.mc_simulate(agent, N, 42, cbf=self.cbf)
-        mean_filter_time = statistics.mean(agent_filter_times)
-        std = statistics.stdev(agent_filter_times)
-        print(f'The mean CBF filter time for one agent is: {mean_filter_time:.2f}, the standard deviation is {std:.2f}')
+        cbf_end_frames, cbf_h_values = self.mc_simulate(agent, n, cbf=self.cbf)
 
         P_u = []
 
@@ -140,8 +120,8 @@ class Evaluator:
                             for t in range(self.max_frames)])
 
             P_bound = [1 - (h0[0][i].item() / M) *
-                     ((M * self.cbf.alpha[i].item() + self.cbf.delta[i].item()) / M) ** t
-                     for t in range(self.max_frames)]
+                       ((M * self.cbf.alpha[i].item() + self.cbf.delta[i].item()) / M) ** t
+                       for t in range(self.max_frames)]
             P_u.append(P_bound)
 
             for run in h_values:
@@ -165,13 +145,13 @@ class Evaluator:
         terminal = np.zeros(self.max_frames)
 
         for f in end_frames:
-            terminal[f-1] += 1 / N
+            terminal[f-1] += 1 / n
         P_emp = np.cumsum(terminal)
 
         terminal_cbf = np.zeros(self.max_frames)
 
         for f in cbf_end_frames:
-            terminal_cbf[f-1] += 1 / N
+            terminal_cbf[f-1] += 1 / n
         cbf_P_emp = np.cumsum(terminal_cbf)
 
         p_ax.plot(cbf_P_emp, color='g')
