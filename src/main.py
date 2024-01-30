@@ -26,6 +26,7 @@ env = Cartpole([0.001, 0.001, 0.01, 0.01])
 # env = DiscreteLunarLander([0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
 # env = ContinuousLunarLander([0.01, 0.01, 0.05, 0.05, 0.05, 0.05])
 
+
 if train:
     pipeline = Trainer(env)
     policy, nndm = pipeline.train()
@@ -44,12 +45,12 @@ else:
 
     h = NNDM_H(env, nndm)
     cbf = CBF(env, h, policy,
-              alpha=[0.9, 0.9],
+              alpha=[0.9, 0.8],
               delta=[0., 0.],
-              action_partitions=16,
+              action_partitions=8,
               noise_partitions=8)
 
     evaluator = Evaluator(env, cbf)
 
-    # evaluator.play(policy)
-    evaluator.plot(policy, 100)
+    # evaluator.play(policy, True, cbf)
+    evaluator.plot(policy, 10)

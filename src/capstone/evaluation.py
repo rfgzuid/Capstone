@@ -13,6 +13,10 @@ import statistics
 
 from tqdm import tqdm
 
+from PIL import Image
+
+import imageio
+
 
 class Evaluator:
     def __init__(self, env: Env, cbf: CBF) -> None:
@@ -25,9 +29,12 @@ class Evaluator:
         self.cbf = cbf
         self.h_function = env.h_function
 
-    def play(self, agent, cbf: CBF = None):
+    def play(self, agent, GIF, cbf: CBF = None):
         specs = self.env.spec
-        specs.kwargs['render_mode'] = 'human'
+        if not GIF:
+            specs.kwargs['render_mode'] = 'human'
+        else:
+            specs.kwargs['render_mode'] = 'rgb_array'
         specs.additional_wrappers = tuple()
 
         play_env = gym.make(specs)
@@ -38,6 +45,7 @@ class Evaluator:
             play_env = CartPoleNoise(play_env, self.noise)
 
         state, _ = play_env.reset()
+        images = []
 
         for frame in range(self.max_frames):
             state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
@@ -45,13 +53,40 @@ class Evaluator:
             if cbf is None:
                 action = agent.select_action(state, exploration=False)
             else:
-                action = cbf.safe_action(state)
+                try:
+                    action = cbf.safe_action(state)
+                    nominal_action = agent.select_action(state, exploration=False)
 
-            state, reward, terminated, _, _ = play_env.step(action.squeeze().detach().numpy())
+                    if GIF:
+                        rgb_array_large = play_env.render()
+                        x_offset = 30
+                        y_offset = 30
 
+                        if torch.all(torch.eq(action, nominal_action)):
+                            small_img = imageio.imread("off.png")
+                            # image = Image.fromarray(small_img)
+                            # image.show()
+                        else:
+                            small_img = imageio.imread("on.png")
+                        small_img = Image.fromarray(small_img[:, :, 0:3]).resize((55,55))
+                        small_img = np.array(small_img)
+                        x_end = x_offset + small_img.shape[1]
+                        y_end = y_offset + small_img.shape[0]
+
+                        rgb_array_large[y_offset:y_end, x_offset:x_end] = small_img
+                        images.append(Image.fromarray(rgb_array_large))
+
+                except InfeasibilityError:
+                    terminated = True
+
+                if self.is_discrete:
+                    state, reward, terminated, _, _ = play_env.step(action.item())
+                else:
+                    state, reward, terminated, _, _ = play_env.step(action.squeeze().detach().numpy())
             if terminated:
                 break
 
+        imageio.mimsave('movie.gif', images)
         play_env.close()  # close the simulation environment
 
     def mc_simulate(self, agent, num_agents, cbf: CBF = None):
