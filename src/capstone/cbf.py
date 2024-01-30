@@ -52,7 +52,7 @@ class CBF:
 
         if not self.is_discrete:
             self.h_ids = env.h_ids
-            self.stds = env.noise
+            self.stds = env.std
 
             factory = BoundModelFactory()
             self.bounded_NNDM_H = factory.build(self.NNDM_H)

@@ -23,8 +23,8 @@ from capstone.ddpg import Actor
 train = False
 
 # env = Cartpole([0.001, 0.001, 0.01, 0.01])
-# env = DiscreteLunarLander([0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
-env = ContinuousLunarLander([0.01, 0.01, 0.05, 0.05, 0.05, 0.05])
+# env = DiscreteLunarLander([0.015, 0.015, 0.031415, 0.05, 0.05, 0.05])
+env = ContinuousLunarLander([0.015, 0.015, 0.031415, 0.05, 0.05, 0.05])
 
 
 if train:

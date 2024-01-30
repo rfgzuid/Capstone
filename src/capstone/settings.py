@@ -37,7 +37,7 @@ class Env(ABC):
     h_function: nn.Sequential
 
     h_ids: list[float]
-    noise: list[float]
+    std: list[float]
 
 
 class Cartpole(Env):
@@ -82,8 +82,8 @@ class Cartpole(Env):
             'eps_decay': 1000
         }
 
-        # 1 - x{0}^2 / 2.4^2
-        # 1 - x{2}^2 / rad(12)^2
+        # 1 - x{0}^2 / 1^2
+        # 1 - x{2}^2 / rad(10)^2
         self.h_function = nn.Sequential(
             FixedLinear(
                 torch.tensor([
@@ -103,7 +103,7 @@ class Cartpole(Env):
         )
 
         self.h_ids = [0, 2]
-        self.noise = [noise[i] for i in self.h_ids]
+        self.std = [noise[i] for i in self.h_ids]
         self.env = CartPoleNoise(env, self.settings['noise'])
 
 
@@ -151,8 +151,8 @@ class DiscreteLunarLander(Env):
             'eps_decay': 1000
         }
 
-        # 1 - x{0}^2 / 1^2
-        # 1 - x{4}^2/ rad(30)^2
+        # 1 - x{0}^2 / 0.2^2
+        # 1 - x{4}^2/ rad(20)^2
         self.h_function = nn.Sequential(
             FixedLinear(
                 torch.tensor([
@@ -172,7 +172,7 @@ class DiscreteLunarLander(Env):
         )
 
         self.h_ids = [0, 4]
-        self.noise = [noise[i] for i in self.h_ids]
+        self.std = [noise[i] for i in self.h_ids]
         self.env = LunarLanderNoise(env, self.settings['noise'])
 
 
@@ -226,8 +226,8 @@ class ContinuousLunarLander(Env):
             'OU_sigma': 0.2
         }
 
-        # 1 - x{0}^2 / 1^2
-        # 1 - x{4}^2 / rad(30)^2
+        # 1 - x{0}^2 / 0.2^2
+        # 1 - x{4}^2 / rad(20)^2
         self.h_function = nn.Sequential(
             FixedLinear(
                 torch.tensor([
@@ -247,5 +247,5 @@ class ContinuousLunarLander(Env):
         )
 
         self.h_ids = [0, 4]
-        self.noise = [noise[i] for i in self.h_ids]
+        self.std = [noise[i] for i in self.h_ids]
         self.env = LunarLanderNoise(env, self.settings['noise'])
