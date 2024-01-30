@@ -13,28 +13,25 @@ from capstone.settings import Cartpole, DiscreteLunarLander, ContinuousLunarLand
 from capstone.training import Trainer
 from capstone.evaluation import Evaluator
 
-from capstone.barriers import NNDM_H
 from capstone.cbf import CBF
 
 from capstone.nndm import NNDM
 from capstone.dqn import DQN
 from capstone.ddpg import Actor
 
-train = False
-
 # env = Cartpole([0.001, 0.001, 0.01, 0.01])
 # env = DiscreteLunarLander([0.015, 0.015, 0.031415, 0.05, 0.05, 0.05])
 env = ContinuousLunarLander([0.015, 0.015, 0.031415, 0.05, 0.05, 0.05])
 
 
-if train:
+def train(env):
     pipeline = Trainer(env)
     policy, nndm = pipeline.train()
 
     torch.save(policy.state_dict(), f'../models/Agents/{type(env).__name__}')
     torch.save(nndm.state_dict(), f'../models/NNDMs/{type(env).__name__}')\
 
-else:
+def evaluate(env):
     policy = DQN(env) if env.is_discrete else Actor(env)
     policy_params = torch.load(f'../models/Agents/{type(env).__name__}')
     policy.load_state_dict(policy_params)
@@ -54,3 +51,12 @@ else:
 
     # evaluator.play(policy, True, cbf)
     evaluator.plot(policy, 100)
+
+
+if __name__ == '__main__':
+    print("\n#####################################\n"
+          "#  TI3165TU Capstone project, 2024  #\n"
+          "#####################################\n")
+
+    # train(env)
+    evaluate(env)
