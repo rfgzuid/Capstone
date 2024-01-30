@@ -45,7 +45,7 @@ def evaluate(env):
               delta=[0., 0.],
               no_action_partitions=64,
               no_noise_partitions=4,
-              stochastic=True)
+              stochastic=False)
 
     evaluator = Evaluator(env, cbf)
 

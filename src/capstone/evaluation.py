@@ -70,9 +70,11 @@ class Evaluator:
                     rgb_array_large = play_env.render()
 
                     if torch.all(torch.eq(action, nominal_action)):
-                        rgb_array_large[:50, :50, :] = np.array([0., 255., 0.])
-                    else:
+                        # red square - cbf did not intervene
                         rgb_array_large[:50, :50, :] = np.array([255., 0., 0.])
+                    else:
+                        # green square - cbf intervened
+                        rgb_array_large[:50, :50, :] = np.array([0., 255., 0.])
 
                     images.append(rgb_array_large)
 
@@ -85,7 +87,7 @@ class Evaluator:
             if terminated:
                 break
 
-        imageio.mimsave(f'{self.env.spec.id}.gif', images)
+        imageio.mimwrite(f'{self.env.spec.id}.gif', images, fps=50)
         play_env.close()  # close the simulation environment
 
     def mc_simulate(self, agent, num_agents, cbf: CBF = None):
