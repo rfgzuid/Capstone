@@ -78,29 +78,17 @@ class Evaluator:
                 h_tensor = self.h_function(state)
                 h_values.append(h_tensor.squeeze().numpy())
 
-                # try cbf action - if cbf disabled, just follow agent policy
+                # try cbf action - if cbf disabled or no safe actions, just follow agent policy
                 try:
                     # start_time = time.time()
 
                     cbf_action = cbf.safe_action(state)
-
-                    if self.is_discrete:
-                        action = agent.select_action(state, exploration=False)
-                    else:
-                        action = agent.select_action(state, exploration=False)
-                        action = action.detach()
-
-                    # if not torch.all(action == cbf_action):
-                        # print(action, cbf_action)
-
                     state, reward, terminated, truncated, _ = self.env.step(cbf_action.squeeze().detach().numpy())
 
                     # end_time = time.time()
                     # agent_filter_time += end_time - start_time
-                except InfeasibilityError:
-                    terminated = True
-                except AttributeError:
-                    # no cbf enabled, use agent action
+                except (AttributeError, InfeasibilityError):
+                    # no cbf enabled or infeasibility error, use agent action
                     if self.is_discrete:
                         action = agent.select_action(state, exploration=False)
                         state, reward, terminated, truncated, _ = self.env.step(action.item())
@@ -120,8 +108,8 @@ class Evaluator:
 
         return end_frames, h_values_all_runs, agent_filter_times
 
-    def plot(self, agent, N: int):  # N is the number of agents or experiments
-        state, _ = self.env.reset(seed=42)  # this is the initial state
+    def plot(self, agent, N: int):
+        state, _ = self.env.reset(seed=42)  # set the initial state for all agents
         dimension_h = self.h_function(torch.tensor(state).unsqueeze(0)).shape[1]  # how many h_i do you have
 
         h_fig, h_ax = plt.subplots(dimension_h, 2)  # second col with cbf

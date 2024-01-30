@@ -95,8 +95,8 @@ class Cartpole(Env):
             Pow(2),
             FixedLinear(
                 torch.tensor([
-                    [-1 / 2.4 ** 2, 0],
-                    [0, -1 / math.radians(12.) ** 2]
+                    [-1 / 1. ** 2, 0],
+                    [0, -1 / math.radians(10.) ** 2]
                 ]),
                 torch.tensor([1., 1.])
             )
