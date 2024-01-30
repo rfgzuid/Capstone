@@ -8,6 +8,8 @@ from .settings import Env
 
 
 def fanin_init(size, eps=None):
+    # weight initialization function for increased training performance
+
     fanin = size[0]
     v = eps if eps is not None else 1. / np.sqrt(fanin)
     return torch.Tensor(size).uniform_(-v, v)
