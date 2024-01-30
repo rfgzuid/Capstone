@@ -47,8 +47,9 @@ else:
     cbf = CBF(env, h, policy,
               alpha=[0.9, 0.8],
               delta=[0., 0.],
-              action_partitions=8,
-              noise_partitions=8)
+              action_partitions=64,
+              noise_partitions=32,
+              stochastic=True)
 
     evaluator = Evaluator(env, cbf)
 
