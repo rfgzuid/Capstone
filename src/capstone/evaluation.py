@@ -25,9 +25,6 @@ class Evaluator:
 
         self.h_function = env.h_function
 
-        self.titles = env.h_name
-        self.image = type(env).__name__
-
     def play(self, agent, cbf: CBF = None):
         specs = self.env.spec
         specs.kwargs['render_mode'] = 'human'

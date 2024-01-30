@@ -50,11 +50,10 @@ class Trainer:
             while not done:
                 if self.is_discrete:
                     action = self.policy.select_action(state)
-                    observation, reward, terminated, _, _ = self.env.step(action.item())
                 else:
-                    action = self.actor.select_action(state.squeeze())
-                    observation, reward, terminated, _, _ = self.env.step(action.detach().numpy())
-                    action = action.clone().detach().unsqueeze(dim=0)
+                    action = self.actor.select_action(state)
+                observation, reward, terminated, _, _ = self.env.step(action.squeeze().detach().numpy())
+                action = action.clone().detach()
 
                 truncated = (frame == self.max_frames)
                 episode_reward += reward
