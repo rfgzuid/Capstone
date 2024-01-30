@@ -249,20 +249,17 @@ class CBF:
             h_vec = torch.zeros(1, h_dim)
             for noise_partition in self.noise_partitions:
                 # input region is a hyperrectangle with the state bounds and the noise + action partitions
-                # print("state", state_input_bounds.lower.shape)
-                # print("noise", noise_partition.lower.shape)
-                # print("action", action_partition.lower.shape)
                 input_bounds = HyperRectangle(
                     torch.cat((state_input_bounds.lower, action_partition.lower, noise_partition.lower), dim=1),
                     torch.cat((state_input_bounds.upper, action_partition.upper, noise_partition.upper), dim=1)
                 )
-                print(input_bounds.lower.shape)
                 crown_bounds = self.bounded_NNDM_H.crown(input_bounds, bound_upper=False)
 
                 # Get the lower bounds
                 (A, b) = crown_bounds.lower
 
                 # State, action, and noise dependent part of the A matrix
+                print("A", A.shape)
                 state_A = A[:, :, self.x_inds]
                 action_A = A[:, :, self.u_inds]
                 noise_A = A[:, :, self.w_inds]
@@ -283,7 +280,9 @@ class CBF:
                 # compute \int_{HR_{wi}} w \, p(w) \, dw
                 weighted_noise_proba = weighted_noise_prob(noise_partition, self.h_ids, self.stds)
                 # The part of the bound on h that is dependent on the noise
-                h_vec_noise = noise_A @ weighted_noise_proba.squeeze(0)
+                print("noise_A", noise_A.squeeze(0).shape)
+                print("weighted_noise_proba.squeeze(0)", weighted_noise_proba.squeeze(0).shape)
+                h_vec_noise = noise_A.squeeze(0) @ weighted_noise_proba.squeeze(0)
                 # the part of the bound on h that is independent on the action
                 h_vec += h_vec_state + h_vec_noise
 
