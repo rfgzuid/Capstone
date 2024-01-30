@@ -22,9 +22,9 @@ from capstone.ddpg import Actor
 
 train = False
 
-env = Cartpole([0.001, 0.001, 0.01, 0.01])
+# env = Cartpole([0.001, 0.001, 0.01, 0.01])
 # env = DiscreteLunarLander([0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
-# env = ContinuousLunarLander([0.01, 0.01, 0.05, 0.05, 0.05, 0.05])
+env = ContinuousLunarLander([0.01, 0.01, 0.05, 0.05, 0.05, 0.05])
 
 
 if train:
@@ -43,12 +43,11 @@ else:
     nndm_params = torch.load(f'../models/NNDMs/{type(env).__name__}')
     nndm.load_state_dict(nndm_params)
 
-    h = NNDM_H(env, nndm)
-    cbf = CBF(env, h, policy,
+    cbf = CBF(env, nndm, policy,
               alpha=[0.9, 0.8],
               delta=[0., 0.],
-              action_partitions=64,
-              noise_partitions=32,
+              no_action_partitions=64,
+              no_noise_partitions=32,
               stochastic=True)
 
     evaluator = Evaluator(env, cbf)

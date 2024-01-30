@@ -21,9 +21,9 @@ class InfeasibilityError(Exception):
 
 
 class CBF:
-    def __init__(self, env: Env, nndm_h: NNDM_H | stochastic_NNDM_H, policy: DQN | Actor,
+    def __init__(self, env: Env, nndm, policy: DQN | Actor,
                  alpha: list[float], delta: list[float],
-                 action_partitions: int = 4, noise_partitions=2, stochastic=False):
+                 no_action_partitions: int = 4, no_noise_partitions=2, stochastic=False):
         self.env = env.env
         self.state_size = self.env.observation_space.shape[0]
         self.action_size = 1 if env.is_discrete else self.env.action_space.shape[0]
@@ -33,9 +33,18 @@ class CBF:
         self.h_func = env.h_function
 
         self.is_stochastic = stochastic
+        self.nndm = nndm
 
-        if self.is_stochastic:
-            self.NNDM_H = nndm_h
+        if not self.is_discrete and not self.is_stochastic:
+            self.NNDM_H = NNDM_H(self.env, self.nndm)
+        elif not self.is_discrete and self.is_stochastic:
+            self.x_inds = range(self.state_size)
+            self.u_inds = range(self.state_size, self.state_size + self.action_size)
+            self.w_inds = range(self.state_size + self.action_size, 2 * self.state_size + self.action_size)
+            xu_inds = list(self.x_inds) + list(self.u_inds)
+            self.NNDM_H = stochastic_NNDM_H(env, self.nndm, xu_inds, self.w_inds)
+
+        
         self.policy = policy
 
         self.alpha = torch.tensor(alpha)
@@ -47,9 +56,10 @@ class CBF:
 
             factory = BoundModelFactory()
             self.bounded_NNDM_H = factory.build(self.NNDM_H)
-            self.action_partitions = self.create_action_partitions(action_partitions)
+            self.action_partitions = self.create_action_partitions(no_action_partitions)
             if self.is_stochastic:
-                self.noise_partitions = noise_partitions
+                self.no_noise_partitions = no_noise_partitions
+                self.noise_partitions = self.create_noise_partitions()
 
     def safe_action(self, state: torch.tensor):
         if self.is_discrete:
@@ -206,7 +216,7 @@ class CBF:
         partitions_upper = [6 * std for std in self.stds]
         # Create the partition slices for each dimension in h_ids
         partition_slices = []
-        for dim_num_slices, dim_min, dim_max in zip([self.noise_partitions] * len(self.h_ids),
+        for dim_num_slices, dim_min, dim_max in zip([self.no_noise_partitions] * len(self.h_ids),
                                                     partitions_lower, partitions_upper):
             dim = torch.linspace(dim_min, dim_max, dim_num_slices + 1)
             centers = (dim[:-1] + dim[1:]) / 2
@@ -224,40 +234,38 @@ class CBF:
                 upper_bounds[0, h_id] = center + half_width
 
             hyperrectangles.append(HyperRectangle(lower_bounds, upper_bounds))
-
         return hyperrectangles
 
     def create_noise_bounds(self, state):
-        x_inds = range(self.state_size)
-        u_inds = range(self.state_size, self.state_size + self.action_size)
-        w_inds = range(self.state_size + self.action_size, 2 * self.state_size + self.action_size)
         # h_ids are the dimensions of the state that are used in h
         h_dim = len(self.h_ids)
         res = []
-
         for action_partition in self.action_partitions:
             # state input region is a hyperrectangle with "radius" 0.01
             state_input_bounds = HyperRectangle.from_eps(state.view(1, -1), 0.01)
             # initialise the part of the bound on h that is dependent on the action
-            h_action_dependent = torch.zeros(1, h_dim, len(u_inds))
+            h_action_dependent = torch.zeros(1, h_dim, len(self.u_inds))
             # initialise the part of the bound on h that is independent on the action
             h_vec = torch.zeros(1, h_dim)
-
-            for noise_partition in range(self.noise_partitions):
+            for noise_partition in self.noise_partitions:
                 # input region is a hyperrectangle with the state bounds and the noise + action partitions
+                # print("state", state_input_bounds.lower.shape)
+                # print("noise", noise_partition.lower.shape)
+                # print("action", action_partition.lower.shape)
                 input_bounds = HyperRectangle(
                     torch.cat((state_input_bounds.lower, action_partition.lower, noise_partition.lower), dim=1),
                     torch.cat((state_input_bounds.upper, action_partition.upper, noise_partition.upper), dim=1)
                 )
+                print(input_bounds.lower.shape)
                 crown_bounds = self.bounded_NNDM_H.crown(input_bounds, bound_upper=False)
 
                 # Get the lower bounds
                 (A, b) = crown_bounds.lower
 
                 # State, action, and noise dependent part of the A matrix
-                state_A = A[:, :, x_inds]
-                action_A = A[:, :, u_inds]
-                noise_A = A[:, :, w_inds]
+                state_A = A[:, :, self.x_inds]
+                action_A = A[:, :, self.u_inds]
+                noise_A = A[:, :, self.w_inds]
 
                 # compute the probability of the noise falling in the given partition of the noise space
                 noise_prob = HR_probability(noise_partition, self.h_ids, self.stds)
@@ -284,4 +292,5 @@ class CBF:
 
             res.append((action_partition, h_action_dependent.squeeze().detach().numpy(),
                         h_vec.squeeze().detach().numpy()))
+            
         return res

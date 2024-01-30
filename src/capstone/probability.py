@@ -21,7 +21,7 @@ def truncated_normal_expectation(mean, std_dev, lower_bound, upper_bound):
 
 def weighted_noise_prob(HR, h_ids, stds):
     res = torch.tensor(len(h_ids))
-    HR_prob = HR_probability(HR)
+    HR_prob = HR_probability(HR, h_ids, stds)
     for i in range(len(h_ids)):
         res[i] = HR_prob * truncated_normal_expectation(0, stds[i], HR.lower[i], HR.upper[i])
     return res
@@ -31,8 +31,8 @@ def HR_probability(HR, h_ids, stds):
     upper_list = []
     len_vector = len(h_ids)
     for i in range(len_vector):
-        lower_list += [HR.lower[i]/stds[i]]
-        upper_list += [HR.upper[i]/stds[i]]
+        lower_list += [HR.lower[:, i]/stds[i]]
+        upper_list += [HR.upper[:, i]/stds[i]]
     prob = 0
     for j in range(len_vector):
         prob += (log_prob(upper_list[j], lower_list[j]))
