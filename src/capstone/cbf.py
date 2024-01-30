@@ -56,30 +56,12 @@ class CBF:
                 self.noise_partitions = noise_partitions
 
     def safe_action(self, state: torch.tensor):
-        safe, agent_action = self.agent_safe(state)
-
-        if safe:
-            return agent_action
         if self.is_discrete:
             return self.discrete_cbf(state)
         elif not self.is_stochastic:
             return self.continuous_cbf(state)
         else:
             return self.continuous_scbf(state)
-
-    def agent_safe(self, state):
-        h_cur = self.h_func(state)
-        action = self.policy.select_action(state, exploration=False)
-
-        h_input = torch.zeros((1, self.state_size + self.action_size))
-        h_input[:, :self.state_size] = state
-        h_input[:, self.state_size:] = action
-
-        h_next = self.NNDM_H(h_input)
-
-        if torch.all(h_next >= self.alpha * h_cur + self.delta).item():
-            return True, action
-        return False, action
 
     def discrete_cbf(self, state):
         # Discrete(n) has actions {0, 1, ..., n-1} - see gymnasium docs

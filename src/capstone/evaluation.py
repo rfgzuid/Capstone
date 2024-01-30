@@ -14,7 +14,6 @@ import statistics
 from tqdm import tqdm
 
 from PIL import Image
-
 import imageio
 
 
@@ -134,7 +133,7 @@ class Evaluator:
         state, _ = self.env.reset(seed=42)  # set the initial state for all agents
         dimension_h = self.h_function(torch.tensor(state).unsqueeze(0)).shape[1]  # how many h_i do you have
 
-        h_fig, h_ax = plt.subplots(dimension_h, 2)  # second col with cbf
+        h_fig, h_ax = plt.subplots(dimension_h, 2)  # second column with cbf
         p_fig, p_ax = plt.subplots()
 
         print('Simulating agents without CBF')
@@ -180,7 +179,7 @@ class Evaluator:
         terminal = np.zeros(self.max_frames)
 
         for f in end_frames:
-            terminal[f-1] += 1 / n
+            terminal[f] += 1 / n
         P_emp = np.cumsum(terminal)
 
         terminal_cbf = np.zeros(self.max_frames)
