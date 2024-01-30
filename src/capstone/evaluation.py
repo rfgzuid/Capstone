@@ -189,6 +189,8 @@ class Evaluator:
         h_ax[1, 0].set_xlabel("Frame")
         h_ax[1, 1].set_xlabel("Frame")
 
+        h_fig.suptitle(f'h trajectories for {self.env.spec.id}')
+
         P = []
         for t in range(self.max_frames):
             P_succeed = 1
@@ -210,7 +212,7 @@ class Evaluator:
         p_ax.plot(cbf_P_emp, color='g', label='CBF')
         p_ax.plot(P, color='black', linestyle='dashed', label='Theoretical bound')
 
-        p_ax.set_title(f"Exit probability - theoretical bound and empirical measure")
+        p_ax.set_title(f"Exit probability plot for {self.env.spec.id}")
         p_ax.set_xlabel("Frame")
         p_ax.set_ylabel("Exit probability")
         p_ax.legend(loc='lower right')

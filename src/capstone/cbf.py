@@ -1,14 +1,16 @@
 from .settings import Env
 from .dqn import DQN
 from .ddpg import Actor
+from .nndm import NNDM
 from .barriers import NNDM_H, stochastic_NNDM_H
-from .probability import HR_probability, log_prob, truncated_normal_expectation, weighted_noise_prob
+from .probability import HR_probability, weighted_noise_prob
 
 from bound_propagation import BoundModelFactory, HyperRectangle
 from bound_propagation.bounds import LinearBounds
+
 import torch
 import cvxpy as cp
-from collections.abc import Iterable
+
 from itertools import product
 
 
@@ -21,7 +23,7 @@ class InfeasibilityError(Exception):
 
 
 class CBF:
-    def __init__(self, env: Env, nndm, policy: DQN | Actor,
+    def __init__(self, env: Env, nndm: NNDM, policy: DQN | Actor,
                  alpha: list[float], delta: list[float],
                  no_action_partitions: int = 4, no_noise_partitions=2, stochastic=False):
         self.env = env.env
@@ -61,9 +63,24 @@ class CBF:
                 self.noise_partitions = self.create_noise_partitions()
 
     def safe_action(self, state: torch.tensor):
-        if self.is_discrete:
+        h_cur = self.h_func(state)
+        nominal_action = self.policy.select_action(state, exploration=False)
+
+        h_input = torch.zeros((1, self.state_size + self.action_size))
+        h_input[:, :self.state_size] = state
+        h_input[:, self.state_size] = nominal_action
+
+        h_next = self.NNDM_H(h_input)
+
+        if torch.all(h_next >= self.alpha * h_cur + self.delta).item():
+            # nominal action is safe, no need to use cbf functions
+            return nominal_action
+
+        if self.is_discrete and not self.is_stochastic:
             return self.discrete_cbf(state)
-        elif not self.is_stochastic:
+        elif self.is_discrete and self.is_stochastic:
+            return self.discrete_scbf(state)
+        elif not self.is_discrete and self.is_stochastic:
             return self.continuous_cbf(state)
         else:
             return self.continuous_scbf(state)
@@ -123,8 +140,8 @@ class CBF:
                     dim_upper_bound = dim_lower_bound + partition_size
 
                     # Recursively generate partitions for the next dimension
-                    generate_partitions(dimensions + 1, lower + [dim_lower_bound], upper + [dim_upper_bound],
-                                        current_partition)
+                    generate_partitions(dimensions + 1, lower + [dim_lower_bound],
+                                        upper + [dim_upper_bound], current_partition)
 
         generate_partitions(0, [], [], [])
 
