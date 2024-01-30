@@ -14,7 +14,6 @@ import statistics
 from tqdm import tqdm
 
 
-
 class Evaluator:
     def __init__(self, env: Env, cbf: CBF) -> None:
         self.env = env.env
@@ -121,7 +120,7 @@ class Evaluator:
 
         return end_frames, h_values_all_runs, agent_filter_times
 
-    def plot(self, agent, cbf: CBF, N: int):  # N is the number of agents or experiments
+    def plot(self, agent, N: int):  # N is the number of agents or experiments
         state, _ = self.env.reset(seed=42)  # this is the initial state
         dimension_h = self.h_function(torch.tensor(state).unsqueeze(0)).shape[1]  # how many h_i do you have
 
@@ -135,7 +134,7 @@ class Evaluator:
         print(f'The mean CBF filter time for one agent is: {mean_filter_time:.2f}, the standard deviation is {std:.2f}')
 
         print('Simulating agents with CBF')
-        cbf_end_frames, cbf_h_values, agent_filter_times = self.mc_simulate(agent, N, 42, cbf=cbf)
+        cbf_end_frames, cbf_h_values, agent_filter_times = self.mc_simulate(agent, N, 42, cbf=self.cbf)
         mean_filter_time = statistics.mean(agent_filter_times)
         std = statistics.stdev(agent_filter_times)
         print(f'The mean CBF filter time for one agent is: {mean_filter_time:.2f}, the standard deviation is {std:.2f}')

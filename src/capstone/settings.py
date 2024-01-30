@@ -39,16 +39,19 @@ class Env(ABC):
 
 class Cartpole(Env):
 
-    def __init__(self) -> None:
+    def __init__(self, noise: list[float]) -> None:
+        if len(noise) != 4:
+            raise ValueError(f'4 noise values expected, got {len(noise)}')
+
         env = gym.make("CartPole-v1")
         self.is_discrete = True
 
         self.settings = {
             'noise': {
-                'x': 0.001,
-                'theta': 0.001,
-                'v_x': 0.01,
-                'v_theta': 0.01
+                'x': noise[0],
+                'theta': noise[1],
+                'v_x': noise[2],
+                'v_theta': noise[3]
             },
 
             'replay_size': 10_000,
@@ -101,18 +104,21 @@ class Cartpole(Env):
 
 class DiscreteLunarLander(Env):
 
-    def __init__(self) -> None:
+    def __init__(self, noise: list[float]) -> None:
+        if len(noise) != 6:
+            raise ValueError(f'6 noise values expected, got {len(noise)}')
+
         env = gym.make("LunarLander-v2")
         self.is_discrete = True
 
         self.settings = {
             'noise': {
-                'x': 0.01,
-                'y': 0.01,
-                'theta': 0.01,
-                'v_x': 0.01,
-                'v_y': 0.01,
-                'v_theta': 0.01
+                'x': noise[0],
+                'y': noise[1],
+                'theta': noise[2],
+                'v_x': noise[3],
+                'v_y': noise[4],
+                'v_theta': noise[5]
             },
 
             'replay_size': 10_000,
@@ -162,20 +168,24 @@ class DiscreteLunarLander(Env):
 
         self.env = LunarLanderNoise(env, self.settings['noise'])
 
+
 class ContinuousLunarLander(Env):
 
-    def __init__(self) -> None:
+    def __init__(self, noise: list[float]) -> None:
+        if len(noise) != 6:
+            raise ValueError(f'6 noise values expected, got {len(noise)}')
+
         env = gym.make("LunarLander-v2", continuous=True)
         self.is_discrete = False
 
         self.settings = {
             'noise': {
-                'x': 0.01,
-                'y': 0.01,
-                'theta': 0.05,
-                'v_x': 0.05,
-                'v_y': 0.05,
-                'v_theta': 0.05
+                'x': noise[0],
+                'y': noise[1],
+                'theta': noise[2],
+                'v_x': noise[3],
+                'v_y': noise[4],
+                'v_theta': noise[5]
             },
 
             'replay_size': 1_000_000,
