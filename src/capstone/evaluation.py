@@ -149,15 +149,16 @@ class Evaluator:
 
         print('Simulating agents without CBF')
         end_frames, h_values = self.mc_simulate(agent, n, cbf=None)
+
         print('Simulating agents with CBF')
         cbf_end_frames, cbf_h_values = self.mc_simulate(agent, n, cbf=self.cbf)
 
         P_u = []
 
-        h0 = self.h_function(torch.tensor(state).unsqueeze(0))  # get the state to tensor
-        M = 1
+        h0 = self.h_function(torch.tensor(state).unsqueeze(0))  # get h value of initial state
+        M = 1  # since our h function are parabolas with maximum set to 1
 
-        # gamma = 0
+        # gamma = 0 - we are interested in exit probability to h < 0 (unsafe set)
         for i in range(dimension_h):
             # plot the exponential decay lower bound of h_i
             h_bound = [h0[0][i].item()]
@@ -171,7 +172,6 @@ class Evaluator:
 
             for run in h_values:
                 h_ax[i, 0].plot(run[:, i], color='r', alpha=0.1)
-            h_ax[i, 0].set_title("h_{}_without CBF".format(i))
 
             # apply the same plot scaling to the CBF plots
             h_ax[i, 1].set_xlim(h_ax[i, 0].get_xlim())
@@ -180,8 +180,14 @@ class Evaluator:
             for run in cbf_h_values:
                 h_ax[i, 1].plot(run[:, i], color='g', alpha=0.1)
             h_ax[i, 1].plot(h_bound, color='black', linestyle='dashed')
-            h_ax[i, 1].set_title(f"h_{i}_with CBF")
 
+        h_ax[0, 0].set_title("No filter")
+        h_ax[0, 1].set_title("CBF filter")
+
+        h_ax[0, 0].set_ylabel("h (position)")
+        h_ax[1, 0].set_ylabel("h (angle)")
+        h_ax[1, 0].set_xlabel("Frame")
+        h_ax[1, 1].set_xlabel("Frame")
 
         P = []
         for t in range(self.max_frames):
@@ -191,21 +197,22 @@ class Evaluator:
             P.append(1 - P_succeed)
 
         terminal = np.zeros(self.max_frames)
-
         for f in end_frames:
             terminal[f] += 1 / n
         P_emp = np.cumsum(terminal)
 
         terminal_cbf = np.zeros(self.max_frames)
-
         for f in cbf_end_frames:
-            terminal_cbf[f-1] += 1 / n
+            terminal_cbf[f] += 1 / n
         cbf_P_emp = np.cumsum(terminal_cbf)
 
-        p_ax.plot(cbf_P_emp, color='g', label='Empirical_with CBF')
-        p_ax.plot(P_emp, color='r', label='Empirical_without CBF')
-        p_ax.plot(P, color='black', linestyle='dashed', label='Theoretical')
-        p_ax.set_title(f"Pu_combined")
+        p_ax.plot(P_emp, color='r', label='No filter')
+        p_ax.plot(cbf_P_emp, color='g', label='CBF')
+        p_ax.plot(P, color='black', linestyle='dashed', label='Theoretical bound')
+
+        p_ax.set_title(f"Exit probability - theoretical bound and empirical measure")
+        p_ax.set_xlabel("Frame")
+        p_ax.set_ylabel("Exit probability")
         p_ax.legend(loc='lower right')
 
         h_fig.tight_layout()

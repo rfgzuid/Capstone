@@ -44,7 +44,6 @@ class CBF:
             xu_inds = list(self.x_inds) + list(self.u_inds)
             self.NNDM_H = stochastic_NNDM_H(env, self.nndm, xu_inds, self.w_inds)
 
-        
         self.policy = policy
 
         self.alpha = torch.tensor(alpha)
