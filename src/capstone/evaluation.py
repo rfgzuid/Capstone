@@ -89,20 +89,23 @@ class Evaluator:
                     # start_time = time.time()
 
                     cbf_action = cbf.safe_action(state.squeeze())
-                    print('CBF', cbf_action)
 
                     if self.is_discrete:
                         action = agent.select_action(state, exploration=False)
+                        action = action.item()
                     else:
                         action = agent.select_action(state.squeeze(), exploration=False)
 
-                    print('No CBF', action, '\n')
+                    print(action, cbf_action)
 
-                    state, reward, terminated, truncated, _ = self.env.step(cbf_action)
+                    state, reward, terminated, truncated, _ = self.env.step(cbf_action.detach().numpy())
 
                     # end_time = time.time()
                     # agent_filter_time += end_time - start_time
-                except (AttributeError, InfeasibilityError):
+                except InfeasibilityError:
+                    terminated = True
+                except AttributeError:
+                    # no cbf enabled, use agent action
                     if self.is_discrete:
                         action = agent.select_action(state, exploration=False)
                         state, reward, terminated, truncated, _ = self.env.step(action.item())
