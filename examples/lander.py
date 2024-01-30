@@ -1,6 +1,6 @@
 import torch
 
-from src.capstone.settings import Cartpole
+from src.capstone.settings import DiscreteLunarLander
 from src.capstone.evaluation import Evaluator
 
 from src.capstone.barriers import NNDM_H
@@ -10,7 +10,7 @@ from src.capstone.nndm import NNDM
 from src.capstone.dqn import DQN
 
 
-env = Cartpole([0.001, 0.001, 0.01, 0.01])
+env = DiscreteLunarLander([0.015, 0.015, 0.031415, 0.05, 0.05, 0.05])
 
 policy = DQN(env)
 policy_params = torch.load(f'../models/Agents/{type(env).__name__}')

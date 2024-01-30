@@ -66,7 +66,7 @@ class Evaluator:
                 action = self.cbf.safe_action(state)
                 nominal_action = agent.select_action(state, exploration=False)
 
-                if gif:
+                if gif and cbf:
                     rgb_array_large = play_env.render()
 
                     if torch.all(torch.eq(action, nominal_action)):
@@ -76,10 +76,8 @@ class Evaluator:
 
                     images.append(rgb_array_large)
 
-            except InfeasibilityError:
-                break
-            except AttributeError:
-                # no cbf enabled
+            except (AttributeError, InfeasibilityError):
+                # no cbf enabled, or no safe action possible
                 action = agent.select_action(state, exploration=False)
 
             state, reward, terminated, _, _ = play_env.step(action.squeeze().detach().numpy())
