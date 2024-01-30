@@ -47,7 +47,7 @@ else:
               alpha=[0.9, 0.8],
               delta=[0., 0.],
               no_action_partitions=64,
-              no_noise_partitions=32,
+              no_noise_partitions=4,
               stochastic=True)
 
     evaluator = Evaluator(env, cbf)
