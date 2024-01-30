@@ -85,9 +85,9 @@ class CBF:
             safe_q_values = q_values.masked_fill(~mask, float('-inf'))
             best_action = torch.argmax(safe_q_values)
 
-            return best_action.item()
+            return best_action.view(1, 1)
         elif safe_actions:
-            return safe_actions[0].item()
+            return safe_actions[0].view(1, 1)
         else:
             raise InfeasibilityError()
     

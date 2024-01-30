@@ -84,7 +84,7 @@ class Evaluator:
                 h_tensor = self.h_function(state)
                 h_values.append(h_tensor.squeeze().numpy())
 
-                # try cbf action - if cbf disabled or no safe action, just follow agent policy
+                # try cbf action - if cbf disabled, just follow agent policy
                 try:
                     # start_time = time.time()
 
@@ -92,11 +92,12 @@ class Evaluator:
 
                     if self.is_discrete:
                         action = agent.select_action(state, exploration=False)
-                        action = action.item()
                     else:
                         action = agent.select_action(state.squeeze(), exploration=False)
+                        action = action.detach()
 
-                    print(action, cbf_action)
+                    if not torch.all(action == cbf_action):
+                        print(action, cbf_action)
 
                     state, reward, terminated, truncated, _ = self.env.step(cbf_action.detach().numpy())
 
