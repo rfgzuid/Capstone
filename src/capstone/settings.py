@@ -36,6 +36,9 @@ class Env(ABC):
     settings: dict[str, Any]
     h_function: nn.Sequential
 
+    h_ids: list[float]
+    noise: list[float]
+
 
 class Cartpole(Env):
 
@@ -99,6 +102,8 @@ class Cartpole(Env):
             )
         )
 
+        self.h_ids = [0, 2]
+        self.noise = [noise[i] for i in self.h_ids]
         self.env = CartPoleNoise(env, self.settings['noise'])
 
 
@@ -166,6 +171,8 @@ class DiscreteLunarLander(Env):
             )
         )
 
+        self.h_ids = [0, 4]
+        self.noise = [noise[i] for i in self.h_ids]
         self.env = LunarLanderNoise(env, self.settings['noise'])
 
 
@@ -239,4 +246,6 @@ class ContinuousLunarLander(Env):
             )
         )
 
+        self.h_ids = [0, 4]
+        self.noise = [noise[i] for i in self.h_ids]
         self.env = LunarLanderNoise(env, self.settings['noise'])

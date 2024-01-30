@@ -22,7 +22,7 @@ class InfeasibilityError(Exception):
 
 class CBF:
     def __init__(self, env: Env, nndm_h: NNDM_H, policy: DQN | Actor, alpha: list[float], delta: list[float],
-                 action_partitions: int = 4, noise_partitions = 2, is_stochastic = False, stds = None, h_ids = None):
+                 action_partitions: int = 4, noise_partitions = 2, is_stochastic = False):
         self.env = env.env
         self.state_size = self.env.observation_space.shape[0]
         self.action_size = 1 if env.is_discrete else self.env.action_space.shape[0]
@@ -33,28 +33,27 @@ class CBF:
 
         self.is_stochastic = is_stochastic
         self.NNDM_H = nndm_h
-        print(self.NNDM_H)
         self.policy = policy
 
         self.alpha = torch.tensor(alpha)
         self.delta = torch.tensor(delta)
 
+        '''
         if len(self.alpha) != self.action_size or len(self.delta) != self.action_size:
             raise ValueError("Wrong sizes of alpha and/or delta")
         if not torch.all(self.delta <= (1 - self.alpha)):
             raise ValueError("Delta value(s) too large")
+        '''
 
         if not self.is_discrete:
+            self.h_ids = env.h_ids
+            self.stds = env.noise
+
             factory = BoundModelFactory()
             self.bounded_NNDM_H = factory.build(self.NNDM_H)
             self.action_partitions = self.create_action_partitions(action_partitions)
             if self.is_stochastic:
-                assert isinstance(noise_partitions, int)
-                assert isinstance(stds, Iterable)
-                assert len(h_ids) == len(stds)
-                self.h_ids = h_ids # TODO: need to be moved to settings
                 self.noise_partitions = noise_partitions
-                self.stds = stds # TODO: need to be moved need to be moved to settings
 
     def safe_action(self, state: torch.tensor):
         safe, agent_action = self.agent_safe(state)

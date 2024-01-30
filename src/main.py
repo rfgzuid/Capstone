@@ -45,7 +45,9 @@ else:
     h = NNDM_H(env, nndm)
     cbf = CBF(env, h, policy,
               alpha=[0.5, 0.5],
-              delta=[0., 0.])
+              delta=[0., 0.],
+              action_partitions=8,
+              noise_partitions=8)
 
     evaluator = Evaluator(env, cbf)
 

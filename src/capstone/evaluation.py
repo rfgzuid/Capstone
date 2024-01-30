@@ -148,11 +148,11 @@ class Evaluator:
         for i in range(dimension_h):
             # plot the exponential decay lower bound of h_i
             h_bound = [h0[0][i].item()]
-            h_bound.extend([h0[0][i].item() * cbf.alpha[i].item() ** (t+1) + cbf.delta[i].item()
+            h_bound.extend([h0[0][i].item() * self.cbf.alpha[i].item() ** (t+1) + self.cbf.delta[i].item()
                             for t in range(self.max_frames)])
 
             P_bound = [1 - (h0[0][i].item() / M) *
-                     ((M * cbf.alpha[i].item() + cbf.delta[i].item()) / M) ** t
+                     ((M * self.cbf.alpha[i].item() + self.cbf.delta[i].item()) / M) ** t
                      for t in range(self.max_frames)]
             P_u.append(P_bound)
 
