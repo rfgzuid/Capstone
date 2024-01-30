@@ -192,7 +192,7 @@ class CBF:
             # Objective
             objective = cp.Minimize(cp.norm(action - nominal_action, 2))
 
-            # Solve the problem, using SCS as the default solver
+            # Solve the problem, using ECOS as the default solver for small scale QP
             problem = cp.Problem(objective, constraints)
             problem.solve(solver='ECOS')
 
