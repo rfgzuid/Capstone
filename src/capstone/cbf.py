@@ -22,7 +22,7 @@ class InfeasibilityError(Exception):
 
 class CBF:
     def __init__(self, env: Env, nndm_h: NNDM_H, policy: DQN | Actor, alpha: list[float], delta: list[float],
-                 action_partitions: int = 4, noise_partitions = 2, is_stochastic = False):
+                 action_partitions: int = 4, noise_partitions = 2):
         self.env = env.env
         self.state_size = self.env.observation_space.shape[0]
         self.action_size = 1 if env.is_discrete else self.env.action_space.shape[0]
@@ -31,7 +31,7 @@ class CBF:
         self.settings = env.settings
         self.h_func = env.h_function
 
-        self.is_stochastic = is_stochastic
+        self.is_stochastic = True
         self.NNDM_H = nndm_h
         self.policy = policy
 
@@ -231,10 +231,9 @@ class CBF:
         return hyperrectangles
 
     def create_noise_bounds(self, state):
-        action_dimensionality = self.env.action_space[0]
         x_inds = range(self.state_size)
-        u_inds = range(self.state_size, self.state_size + action_dimensionality)
-        w_inds = range(self.state_size + action_dimensionality, 2*self.state_size + action_dimensionality)
+        u_inds = range(self.state_size, self.state_size + self.action_size)
+        w_inds = range(self.state_size + self.action_size, 2 * self.state_size + self.action_size)
         # h_ids are the dimensions of the state that are used in h
         h_dim = len(self.h_ids)
         res = []
@@ -245,7 +244,7 @@ class CBF:
             h_action_dependend = torch.zeros(1, h_dim, len(u_inds))
             # initialise the part of the bound on h that is INdependend on the action
             h_vec = torch.zeros(1, h_dim)
-            for noise_partition in self.noise_partitions:
+            for noise_partition in range(self.noise_partitions):
                 # input region is a hyperrectangle with the state bounds and the noise + action partitions
                 input_bounds = HyperRectangle(torch.cat((state_input_bounds.lower, action_partition.lower, noise_partition.lower), dim=1),
                                             torch.cat((state_input_bounds.upper, action_partition.upper, noise_partition.upper), dim=1))
@@ -259,7 +258,7 @@ class CBF:
                 action_A = A[:, :, u_inds]
                 noise_A = A[:, :, w_inds]
 
-                # compute the probability of the the noise falling in the given partition of the noise space
+                # compute the probability of the noise falling in the given partition of the noise space
                 noise_prob = HR_probability(noise_partition, self.h_ids, self.stds)
                 noise_prob = noise_prob.item()
 
@@ -277,7 +276,7 @@ class CBF:
                 # The part of the bound on h that is dependend on the noise
                 h_vec_noise = noise_A @ weighted_noise_proba.squeeze(0)
                 # the part of the bound on h that is independend on the action
-                h_vec +=  h_vec_state + h_vec_noise
+                h_vec += h_vec_state + h_vec_noise
 
                 # the weighted part of the bound on h that is dependend on the action
                 h_action_dependend += noise_prob * action_A
