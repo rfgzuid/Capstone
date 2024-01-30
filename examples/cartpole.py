@@ -1,8 +1,7 @@
 # Import the packages and modules created in source files
 import torch
 
-from src.capstone.settings import Cartpole, DiscreteLunarLander, ContinuousLunarLander
-from src.capstone.training import Trainer
+from src.capstone.settings import Cartpole
 from src.capstone.evaluation import Evaluator
 
 from src.capstone.barriers import NNDM_H
@@ -10,45 +9,27 @@ from src.capstone.cbf import CBF
 
 from src.capstone.nndm import NNDM
 from src.capstone.dqn import DQN
-from src.capstone.ddpg import Actor
 
-# Initialize the train parameter as True for this example
-train = True
 
-# Initialize the process with CBFs
-with_CBF = True
+env = Cartpole([0.001, 0.001, 0.01, 0.01])
 
-# Number of repeated experiments for Monte Carlo Simulation
-N = 10
+policy = DQN(env)
+policy_params = torch.load(f'../models/Agents/{type(env).__name__}')
+policy.load_state_dict(policy_params)
 
-# Create the environment of Cartpole
-env = Cartpole()
+nndm = NNDM(env)
+nndm_params = torch.load(f'../models/NNDMs/{type(env).__name__}')
+nndm.load_state_dict(nndm_params)
 
-# main
-if train:
-    pipeline = Trainer(env)
-    policy, nndm = pipeline.train()
+h = NNDM_H(env, nndm)
+cbf = CBF(env, nndm, policy,
+          alpha=[0.9, 0.8],
+          delta=[0., 0.],
+          no_action_partitions=64,
+          no_noise_partitions=4,
+          stochastic=False)
 
-    torch.save(policy.state_dict(), f'../models/Agents/{type(env).__name__}')
-    torch.save(nndm.state_dict(), f'../models/NNDMs/{type(env).__name__}')
-else:
-    policy = DQN(env) if env.is_discrete else Actor(env)
-    policy_params = torch.load(f'../models/Agents/{type(env).__name__}')
-    policy.load_state_dict(policy_params)
+evaluator = Evaluator(env, cbf)
 
-    nndm = NNDM(env)
-    nndm_params = torch.load(f'../models/NNDMs/{type(env).__name__}')
-    nndm.load_state_dict(nndm_params)
-
-    evaluator = Evaluator(env)
-
-    h = NNDM_H(env, nndm)
-    cbf = CBF(env, h, policy, alpha=0.9)
-
-    evaluator.play(policy)
-
-    # Evaluation metrics plot to show
-    if with_CBF:
-        evaluator.plot(policy, 0.9, 0, N, 500, cbf)
-    else:
-        evaluator.plot(policy, 0.9, 0, N, 500, None)
+evaluator.play(policy, cbf=True, gif=True)
+evaluator.plot(policy, 100)

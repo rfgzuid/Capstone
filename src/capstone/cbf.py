@@ -35,8 +35,8 @@ class CBF:
         self.is_stochastic = stochastic
         self.nndm = nndm
 
-        if not self.is_discrete and not self.is_stochastic:
-            self.NNDM_H = NNDM_H(self.env, self.nndm)
+        if not self.is_stochastic:
+            self.NNDM_H = NNDM_H(env, self.nndm)
         elif not self.is_discrete and self.is_stochastic:
             self.x_inds = range(self.state_size)
             self.u_inds = range(self.state_size, self.state_size + self.action_size)

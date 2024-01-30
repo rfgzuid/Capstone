@@ -1,5 +1,4 @@
 import gymnasium as gym
-
 import torch
 
 from .settings import Env
@@ -10,12 +9,8 @@ from .dqn import DQN
 
 import matplotlib.pyplot as plt
 import numpy as np
-import time
-import statistics
 
-from tqdm import tqdm
-
-from PIL import Image
+from tqdm.auto import tqdm
 import imageio.v2 as imageio
 
 
@@ -37,7 +32,7 @@ class Evaluator:
         self.cbf = cbf
         self.h_function = env.h_function
 
-    def play(self, agent: DQN | Actor, gif: bool = False, cbf: CBF = None):
+    def play(self, agent: DQN | Actor, cbf: bool = False, gif: bool = False):
         """
         Function to show a (trained) agent interacting with the environments.
 
@@ -67,40 +62,32 @@ class Evaluator:
         for frame in range(self.max_frames):
             state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
 
-            if cbf is None:
+            try:
+                action = self.cbf.safe_action(state)
+                nominal_action = agent.select_action(state, exploration=False)
+
+                if gif:
+                    rgb_array_large = play_env.render()
+
+                    if torch.all(torch.eq(action, nominal_action)):
+                        rgb_array_large[:50, :50, :] = np.array([0., 255., 0.])
+                    else:
+                        rgb_array_large[:50, :50, :] = np.array([255., 0., 0.])
+
+                    images.append(rgb_array_large)
+
+            except InfeasibilityError:
+                break
+            except AttributeError:
+                # no cbf enabled
                 action = agent.select_action(state, exploration=False)
-            else:
-                try:
-                    action = cbf.safe_action(state)
-                    nominal_action = agent.select_action(state, exploration=False)
 
-                    if gif:
-                        rgb_array_large = play_env.render()
-                        x_offset = 30
-                        y_offset = 30
-
-                        if torch.all(torch.eq(action, nominal_action)):
-                            small_img = imageio.imread("off.png")
-                        else:
-                            small_img = imageio.imread("on.png")
-
-                        small_img = Image.fromarray(small_img[:, :, 0:3]).resize((55,55))
-                        small_img = np.array(small_img)
-                        x_end = x_offset + small_img.shape[1]
-                        y_end = y_offset + small_img.shape[0]
-
-                        rgb_array_large[y_offset:y_end, x_offset:x_end] = small_img
-                        images.append(Image.fromarray(rgb_array_large))
-
-                except InfeasibilityError:
-                    terminated = True
-
-                state, reward, terminated, _, _ = play_env.step(action.squeeze().detach().numpy())
+            state, reward, terminated, _, _ = play_env.step(action.squeeze().detach().numpy())
 
             if terminated:
                 break
 
-        imageio.mimsave('movie.gif', images)
+        imageio.mimsave(f'{self.env.spec.id}.gif', images)
         play_env.close()  # close the simulation environment
 
     def mc_simulate(self, agent, num_agents, cbf: CBF = None):
@@ -143,6 +130,8 @@ class Evaluator:
                 done = terminated or truncated
 
             h_values.append(np.array(h_list))
+
+        self.env.close()
         return unsafe_frames, h_values
 
     def plot(self, agent: DQN | Actor, n: int):
