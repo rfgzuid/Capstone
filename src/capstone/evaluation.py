@@ -14,7 +14,7 @@ import statistics
 from tqdm import tqdm
 
 from PIL import Image
-import imageio
+import imageio.v2 as imageio
 
 
 class Evaluator:
