@@ -22,9 +22,9 @@ from capstone.ddpg import Actor
 
 train = False
 
-env = Cartpole([0.001, 0.001, 0.01, 0.01])
+# env = Cartpole([0.001, 0.001, 0.01, 0.01])
 # env = DiscreteLunarLander([0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
-# env = ContinuousLunarLander([0.01, 0.01, 0.05, 0.05, 0.05, 0.05])
+env = ContinuousLunarLander([0.01, 0.01, 0.05, 0.05, 0.05, 0.05])
 
 
 if train:
@@ -53,4 +53,4 @@ else:
     evaluator = Evaluator(env, cbf)
 
     # evaluator.play(policy, True, cbf)
-    evaluator.plot(policy, 10)
+    evaluator.plot(policy, 100)

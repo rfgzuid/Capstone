@@ -164,8 +164,8 @@ class DiscreteLunarLander(Env):
             Pow(2),
             FixedLinear(
                 torch.tensor([
-                    [-1 / 1. ** 2, 0],
-                    [0, -1 / math.radians(30.) ** 2]
+                    [-1 / 0.2 ** 2, 0],
+                    [0, -1 / math.radians(20.) ** 2]
                 ]),
                 torch.tensor([1., 1.])
             )
@@ -239,8 +239,8 @@ class ContinuousLunarLander(Env):
             Pow(2),
             FixedLinear(
                 torch.tensor([
-                    [-1 / 1. ** 2, 0],
-                    [0, -1 / math.radians(30.) ** 2]
+                    [-1 / 0.2 ** 2, 0],
+                    [0, -1 / math.radians(20.) ** 2]
                 ]),
                 torch.tensor([1., 1.])
             )
