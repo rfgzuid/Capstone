@@ -160,7 +160,7 @@ class Evaluator:
 
             for run in h_values:
                 h_ax[i, 0].plot(run[:, i], color='r', alpha=0.1)
-
+            h_ax[i, 0].set_title("h_{}_without CBF".format(i))
             # apply the same plot scaling to the CBF plots
             h_ax[i, 1].set_xlim(h_ax[i, 0].get_xlim())
             h_ax[i, 1].set_ylim(h_ax[i, 0].get_ylim())
@@ -168,6 +168,8 @@ class Evaluator:
             for run in cbf_h_values:
                 h_ax[i, 1].plot(run[:, i], color='g', alpha=0.1)
             h_ax[i, 1].plot(h_bound, color='black', linestyle='dashed')
+            h_ax[i, 1].set_title(f"h_{i}_with CBF")
+
 
         P = []
         for t in range(self.max_frames):
@@ -188,9 +190,11 @@ class Evaluator:
             terminal_cbf[f-1] += 1 / n
         cbf_P_emp = np.cumsum(terminal_cbf)
 
-        p_ax.plot(cbf_P_emp, color='g')
-        p_ax.plot(P_emp, color='r')
-        p_ax.plot(P, color='black', linestyle='dashed')
+        p_ax.plot(cbf_P_emp, color='g', label='Empirical_with CBF')
+        p_ax.plot(P_emp, color='r', label='Empirical_without CBF')
+        p_ax.plot(P, color='black', linestyle='dashed', label='Theoretical')
+        p_ax.set_title(f"Pu_combined")
+        p_ax.legend(loc='lower right')
 
         h_fig.tight_layout()
         p_fig.tight_layout()
