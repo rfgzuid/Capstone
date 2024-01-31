@@ -1,5 +1,5 @@
 # Capstone
-Safe reinforcement learning with stochastic control barrier functions (TI3165TU Capstone project 2023)
+Safe reinforcement learning with stochastic control barrier functions (TI3165TU Capstone project 2023). Library that implements SCBF in to Reinforcement Learning, based on [SCBF SOURCE].
 
 Reinforcement learning compatible with OpenAI gymnasium. Currently implemented:
 - Cartpole v1
@@ -7,20 +7,20 @@ Reinforcement learning compatible with OpenAI gymnasium. Currently implemented:
 
 The library support training of DDQN (discrete actions) and DDPG (continuous actions) agents. The code is based on [DDPG SOURCE] and [DQN SOURCE].
 
-Also a Neural Network Dynamical Model (NNDM) is trained parallel to the agents, using the same Replay Memory. Both the NNDM and Agent parameters for each environment are saved in the 'Models' folder. These can directly be loaded and evaluated using the library.
+Also a Neural Network Dynamical Model (NNDM) is trained parallel to the agents, using the same Replay Memory. Both the NNDM and Agent parameters for each environment are saved in the `Models/` folder. These can directly be loaded and evaluated using the library.
 
 ## Project description
-In this project we implemented both discrete and continuous Control Barrier Functions (CBFs) on top of a Reinforcement learning agent in order to have some theoretical probability of being unsafe (P_u) in a certain time window of length K, this probability is tied to the initial location of the agent, and the environment it is in. The model is trained, and evaluated and plots of this theoretical and empirical probability are plotted.
+In this project we implemented both discrete and continuous Control Barrier Functions (CBFs) on top of a Reinforcement learning agent in order to have some theoretical probability of being unsafe ($P_u$) in a certain time window of length K, this probability is tied to the initial location of the agent, and the environment it is in. The model is trained, and evaluated and plots of this theoretical and empirical probability are plotted.
 
 ## Installation
-The use this library it is recommended to install the packages from the requirements.txt file. This can be done by running the following command in the terminal:
+The use this library it is recommended to install the packages from the `requirements.txt` file. This can be done by running the following command in the terminal:
 
 ```pip install -r requirements.txt```
 
 ## Usage
 The library can be used to train agents for the different environments. The training can be done by running the following command in the terminal: ```python main.py```. In the main.py file, the environment can be changed by uncommenting the desired environment. If the train bool variable is set to True either a DDQN or DDPG agent is trained, if it is set to False a simulation of the environment is run.
 
-- `settings.py`: all hyperparameters for the environment wrappers and agents can be changed. 
+- `settings.py`: all hyperparameters for the environment wrappers and agents can be changed.
 
 - `ddpg.py, ddqn.py`: the neural network architectures and updater steps for the agents are setup.
 
@@ -91,7 +91,7 @@ Together with the h functions and a controller we can apply a filter on the cont
 
 ## h functions
 
-For the environments, concave h functions are used so that we convert the CBF constraint from ED to CED [SCBF SOURCE]. The output of the h functions are vectors; each element in the vector corresponds to a safety-critical state element for which we define bounds. The parabolas are defined to have maximum 1, and have their roots at the bounds of unsafety. 
+For the environments, concave h functions are used so that we convert the CBF constraint from ED to CED ([SCBF SOURCE]). The output of the h functions are vectors; each element in the vector corresponds to a safety-critical state element for which we define bounds. The parabolas are defined to have maximum 1, and have their roots at the bounds of unsafety. 
 
 Cartpole
 - Angle [-7 deg, 7 deg]
@@ -102,6 +102,8 @@ Lunar Lander
 - X position [-0.5, 0.5]
 
 We recognize that crafting a concave h function this way is very limited, as state elements are only considered independent of one another. More complex functions could be specified in the settings.py file; for example h constraints that consider a combination of position & velocity.
+
+Apart from the h function that influences how succesful a CBF can be, careful consideration should be placed in choosing the alpha hyperparameter that determines the tightness of the CBF constraint.
  
 ## References
 - [SCBF SOURCE], (https://arxiv.org/abs/2302.07469)
