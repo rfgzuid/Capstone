@@ -5,7 +5,7 @@ Reinforcement learning compatible with OpenAI gymnasium. Currently implemented:
 - Cartpole v1
 - Lunar lander v2 (discrete & continuous)
 
-The library support training of DDQN (discrete actions) and DDPG (continuous actions) agents. The code is based on [DDPG SOURCE] [DDQN SOURCE].
+The library support training of DDQN (discrete actions) and DDPG (continuous actions) agents. The code is based on [DDPG SOURCE] and [DQN SOURCE].
 
 Also a Neural Network Dynamical Model (NNDM) is trained parallel to the agents, using the same Replay Memory. Both the NNDM and Agent parameters for each environment are saved in the 'Models' folder. These can directly be loaded and evaluated using the library.
 
@@ -42,55 +42,26 @@ Below is a short example of how to use the library to setup and train the cartpo
 # Import the packages and modules created in source files
 import torch
 
-from src.capstone.settings import Cartpole, DiscreteLunarLander, ContinuousLunarLander
-from src.capstone.training import Trainer
-from src.capstone.evaluation import Evaluator
+from capstone.settings import Cartpole, DiscreteLunarLander, ContinuousLunarLander
+from capstone.training import Trainer
+from capstone.evaluation import Evaluator
 
-from src.capstone.barriers import NNDM_H
-from src.capstone.cbf import CBF
+from capstone.cbf import CBF
 
-from src.capstone.nndm import NNDM
-from src.capstone.dqn import DQN
-from src.capstone.ddpg import Actor
+from capstone.nndm import NNDM
+from capstone.dqn import DQN
+from capstone.ddpg import Actor
 
-# Initialize the train parameter as True for this example
-train = True
+env = Cartpole([0.001, 0.001, 0.01, 0.01])
 
-# Initialize the process with CBFs
-with_CBF = True
+pipeline = Trainer(env)
+policy, nndm = pipeline.train()
 
-# Create the environment of Cartpole
-env = Cartpole()
-
-# main
-if train:
-    pipeline = Trainer(env)
-    policy, nndm = pipeline.train()
-
-    torch.save(policy.state_dict(), f'../models/Agents/{type(env).__name__}')
-    torch.save(nndm.state_dict(), f'../models/NNDMs/{type(env).__name__}')
-else:
-    policy = DQN(env) if env.is_discrete else Actor(env)
-    policy_params = torch.load(f'../models/Agents/{type(env).__name__}')
-    policy.load_state_dict(policy_params)
-
-    nndm = NNDM(env)
-    nndm_params = torch.load(f'../models/NNDMs/{type(env).__name__}')
-    nndm.load_state_dict(nndm_params)
-
-    evaluator = Evaluator(env)
-
-    h = NNDM_H(env, nndm)
-    cbf = CBF(env, h, policy, alpha=0.9)
-
-    evaluator.play(policy)
-
-    # Evaluation metrics plot to show - 10 agents are simulated for 500 frames
-    if with_CBF:
-        evaluator.plot(policy, 0.9, 0, N, 500, cbf=cbf)
-    else:
-        evaluator.plot(policy, 0.9, 0, N, 500)
+torch.save(policy.state_dict(), f'../models/Agents/{type(env).__name__}')
+torch.save(nndm.state_dict(), f'../models/NNDMs/{type(env).__name__}')\
 ```
+
+Example scripts using Control Barrier Functions are shown in the `examples/` folder.
 
 ## MOSCOW requirements
 We managed to implement all the MoSCoW requirements. The deliverables for each requirement can be found in the following files:
@@ -123,22 +94,22 @@ Together with the h functions and a controller we can apply a filter on the cont
 For the environments, concave h functions are used so that we convert the CBF constraint from ED to CED [SCBF SOURCE]. The output of the h functions are vectors; each element in the vector corresponds to a safety-critical state element for which we define bounds. The parabolas are defined to have maximum 1, and have their roots at the bounds of unsafety. 
 
 Cartpole
-- Angle [-12 deg, 12 deg]
-- Position [-2.4 m, 2.4 m]
+- Angle [-7 deg, 7 deg]
+- Position [-1 m, 1 m]
 
 Lunar Lander
-- Angle [-30 deg, 30 deg]
-- X position [-1, 1]
+- Angle [-20 deg, 20 deg]
+- X position [-0.5, 0.5]
 
 We recognize that crafting a concave h function this way is very limited, as state elements are only considered independent of one another. More complex functions could be specified in the settings.py file; for example h constraints that consider a combination of position & velocity.
  
 ## References
 - [SCBF SOURCE], (https://arxiv.org/abs/2302.07469)
 - [DDPG SOURCE], (https://github.com/vy007vikas/PyTorch-ActorCriticRL)
-- [DDQN SOURCE], (https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html)
+- [DQN SOURCE], (https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html)
 - [BOUNDPROPAGATION SOURCE], (https://github.com/Zinoex/bound_propagation/blob/main/README.md)
 
 [SCBF SOURCE]: https://arxiv.org/abs/2302.07469
 [DDPG SOURCE]: https://github.com/vy007vikas/PyTorch-ActorCriticRL
-[DDQN SOURCE]: https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
+[DQN SOURCE]: https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
 [BOUNDPROPAGATION SOURCE]: https://github.com/Zinoex/bound_propagation/blob/main/README.md
