@@ -77,11 +77,9 @@ class CBF:
             # nominal action is safe, no need to use cbf functions
             return nominal_action
 
-        if self.is_discrete and not self.is_stochastic:
+        if self.is_discrete:
             return self.discrete_cbf(state)
-        elif self.is_discrete and self.is_stochastic:
-            return self.discrete_scbf(state)
-        elif not self.is_discrete and not self.is_stochastic:
+        elif not self.is_stochastic:
             return self.continuous_cbf(state)
         else:
             return self.continuous_scbf(state)

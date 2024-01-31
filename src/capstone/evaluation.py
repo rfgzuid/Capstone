@@ -198,12 +198,12 @@ class Evaluator:
                 P_succeed *= (1 - P_u[q][t])
             P.append(1 - P_succeed)
 
-        terminal = np.zeros(self.max_frames)
+        terminal = np.zeros(self.max_frames + 1)
         for f in end_frames:
             terminal[f] += 1 / n
         P_emp = np.cumsum(terminal)
 
-        terminal_cbf = np.zeros(self.max_frames)
+        terminal_cbf = np.zeros(self.max_frames + 1)
         for f in cbf_end_frames:
             terminal_cbf[f] += 1 / n
         cbf_P_emp = np.cumsum(terminal_cbf)
