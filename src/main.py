@@ -1,12 +1,3 @@
-"""
-Library TODO:
-- Add docstrings to files, classes & functions, and add extra (line) comments where necessary
-- Add type hints (only where it is really necessary for code understanding)
-- Add code sources (for both DDQN and DDPG) + articles on which the code is based
-  These sources are also going to be cited when we have to justify agent architectures (e.g. cartpole & bipedal walker)
-  Also: Frederik gave a lot of RL architecture/training tips that we could briefly mention we used
-"""
-
 import torch
 
 from capstone.settings import Cartpole, DiscreteLunarLander, ContinuousLunarLander
