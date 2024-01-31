@@ -51,15 +51,17 @@ class CBF:
         self.alpha = torch.tensor(alpha)
         self.delta = torch.tensor(delta)
 
-        self.h_ids = env.h_ids
-        self.stds = env.std
+        if not self.is_discrete:
+            self.h_ids = env.h_ids
+            self.stds = env.std
 
-        factory = BoundModelFactory()
-        self.bounded_NNDM_H = factory.build(self.NNDM_H)
-        self.action_partitions = self.create_action_partitions(no_action_partitions)
-        if self.is_stochastic:
-            self.no_noise_partitions = no_noise_partitions
-            self.noise_partitions = self.create_noise_partitions()
+            factory = BoundModelFactory()
+            self.bounded_NNDM_H = factory.build(self.NNDM_H)
+            self.action_partitions = self.create_action_partitions(no_action_partitions)
+
+            if self.is_stochastic:
+                self.no_noise_partitions = no_noise_partitions
+                self.noise_partitions = self.create_noise_partitions()
 
     def safe_action(self, state: torch.tensor):
         h_cur = self.h_func(state)
@@ -116,89 +118,6 @@ class CBF:
             return safe_actions[0].view(1, 1)
         else:
             raise InfeasibilityError()
-        
-    # def discrete_scbf(self, state):
-    #     # Discrete(n) has actions {0, 1, ..., n-1} - see gymnasium docs
-    #     action_space = list(range(self.env.action_space.n))
-    #     safe_actions = []
-
-    #     h_cur = self.h_func(state)
-
-    #     for action in action_space:
-    #         action_vec = torch.zeros(self.env.action_space.n)
-    #         action_vec[action] = 1
-
-    #         # h_input = torch.zeros((1, 2 * self.state_size + self.env.action_space.n))
-    #         # h_input[:, :self.state_size] = state
-    #         # h_input[:, self.state_size:self.state_size + self.env.action_space.n] = action_vec
-    #         # hyperrec1 = HyperRectangle.from_eps(h_input, 0.01)
-    #         state_input_bounds = HyperRectangle.from_eps(state, 0.01)
-    #         action_input_bounds = HyperRectangle.from_eps(action_vec, 0.01)
-
-    #         for noise_partition in self.noise_partitions:
-    #             input_bounds = HyperRectangle(torch.cat([state_input_bounds.lower, action_input_bounds.lower, noise_partition.lower], dim=1,),
-    #                                           torch.cat([state_input_bounds.upper, action_input_bounds.upper, noise_partition.upper], dim=1))
-                
-    #             crown_bounds = self.bounded_NNDM_H.crown(input_bounds, bound_upper=False)
-
-    #             # Get the lower bounds
-    #             (A, b) = crown_bounds.lower
-
-    #             # State, action, and noise dependent part of the A matrix
-    #             state_A = A[:, :, self.x_inds]
-    #             action_A = A[:, :, self.u_inds]
-    #             noise_A = A[:, :, self.w_inds]
-
-    #             # compute the probability of the noise falling in the given partition of the noise space
-    #             noise_prob = HR_probability(noise_partition, self.h_ids, self.stds)
-    #             noise_prob = noise_prob.item()
-
-    #             # Scale state_A and b corresponding to noise_prob
-    #             state_A, b = noise_prob * state_A, noise_prob * b
-    #             # Make this into a (lower) linear bounds (\underbar{A}_x x + b \leq ...)
-    #             state_action_input_bounds = 
-    #             state_linear_bounds = LinearBounds(state_input_bounds, (state_A, b), None)
-    #             # Convert to lower interval bounds (b \leq ...)
-    #             state_interval_bounds = state_linear_bounds.concretize()
-    #             # Select the lower bound
-    #             h_vec_state = state_interval_bounds.lower.detach()
-
-    #             # compute \int_{HR_{wi}} w \, p(w) \, dw
-    #             weighted_noise_proba = weighted_noise_prob(noise_partition, self.h_ids, self.stds)
-    #             # The part of the bound on h that is dependent on the noise
-    #             print("noise_A", noise_A.squeeze(0).shape)
-    #             print("weighted_noise_proba.squeeze(0)", weighted_noise_proba.squeeze(0).shape)
-    #             h_vec_noise = noise_A.squeeze(0) @ weighted_noise_proba.squeeze(0)
-    #             # the part of the bound on h that is independent on the action
-    #             h_vec += h_vec_state + h_vec_noise
-
-    #             # the weighted part of the bound on h that is dependent on the action
-    #             h_action_dependent += noise_prob * action_A
-
-    #         res.append((action_partition, h_action_dependent.squeeze().detach().numpy(),
-    #                     h_vec.squeeze().detach().numpy()))
-                
-
-    #         h_next = self.NNDM_H(h_input)
-
-    #         if torch.all(h_next >= self.alpha * h_cur + self.delta).item():
-    #             safe_actions.append(action)
-
-    #     if safe_actions and len(safe_actions) > 1:
-    #         q_values = self.policy(state).squeeze()
-    #         mask = torch.zeros_like(q_values, dtype=torch.bool)
-
-    #         for action in safe_actions:
-    #             mask[action] = True
-
-    #         safe_q_values = q_values.masked_fill(~mask, float('-inf'))
-    #         best_action = torch.argmax(safe_q_values)
-
-    #         return best_action.view(1, 1)
-    #     elif safe_actions:
-    #         return safe_actions[0].view(1, 1)
-    #     else:
-    #         raise InfeasibilityError()
     
     def create_action_partitions(self, partitions):
         num_actions = self.env.action_space.shape[0]
