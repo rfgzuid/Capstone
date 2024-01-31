@@ -68,8 +68,10 @@ class CBF:
 
         h_input = torch.zeros((1, self.state_size + self.action_size))
         h_input[:, :self.state_size] = state
-        h_input[:, self.state_size] = nominal_action
+        h_input[:, self.state_size:] = nominal_action
 
+        if self.is_stochastic:
+            h_input = torch.cat((h_input, torch.zeros(1, self.state_size)), dim=1)
         h_next = self.NNDM_H(h_input)
 
         if torch.all(h_next >= self.alpha * h_cur + self.delta).item():
@@ -80,7 +82,7 @@ class CBF:
             return self.discrete_cbf(state)
         elif self.is_discrete and self.is_stochastic:
             return self.discrete_scbf(state)
-        elif not self.is_discrete and self.is_stochastic:
+        elif not self.is_discrete and not self.is_stochastic:
             return self.continuous_cbf(state)
         else:
             return self.continuous_scbf(state)
