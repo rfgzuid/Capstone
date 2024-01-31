@@ -378,10 +378,12 @@ class CBF:
 
                 # compute \int_{HR_{wi}} w \, p(w) \, dw
                 weighted_noise_proba = weighted_noise_prob(noise_partition, self.h_ids, self.stds)
+
+                noise_vec = torch.zeros(self.state_size)
+                for i, ind in enumerate(self.h_ids):
+                    noise_vec[ind] = weighted_noise_proba[i]
                 # The part of the bound on h that is dependent on the noise
-                print("noise_A", noise_A.squeeze(0).shape)
-                print("weighted_noise_proba.squeeze(0)", weighted_noise_proba.squeeze(0).shape)
-                h_vec_noise = noise_A.squeeze(0) @ weighted_noise_proba.squeeze(0)
+                h_vec_noise = noise_A.squeeze(0) @ noise_vec
                 # the part of the bound on h that is independent on the action
                 h_vec += h_vec_state + h_vec_noise
 
