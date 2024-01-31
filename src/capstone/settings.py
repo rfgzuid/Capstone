@@ -83,7 +83,7 @@ class Cartpole(Env):
         }
 
         # 1 - x{0}^2 / 1^2
-        # 1 - x{2}^2 / rad(10)^2
+        # 1 - x{2}^2 / rad(7)^2
         self.h_function = nn.Sequential(
             FixedLinear(
                 torch.tensor([
@@ -96,7 +96,7 @@ class Cartpole(Env):
             FixedLinear(
                 torch.tensor([
                     [-1 / 1. ** 2, 0],
-                    [0, -1 / math.radians(10.) ** 2]
+                    [0, -1 / math.radians(7.) ** 2]
                 ]),
                 torch.tensor([1., 1.])
             )
