@@ -36,6 +36,16 @@ class CBF:
 
         self.is_stochastic = stochastic
         self.nndm = nndm
+        self.policy = policy
+
+        self.alpha = torch.tensor(alpha)
+        self.delta = torch.tensor(delta)
+
+        self.h_ids = env.h_ids
+        self.stds = env.std
+
+        if not self.is_discrete:
+            self.action_partitions = self.create_action_partitions(no_action_partitions)
 
         if not self.is_stochastic:
             self.NNDM_H = NNDM_H(env, self.nndm)
@@ -51,17 +61,15 @@ class CBF:
         self.alpha = torch.tensor(alpha)
         self.delta = torch.tensor(delta)
 
-        if not self.is_discrete:
-            self.h_ids = env.h_ids
-            self.stds = env.std
+        self.h_ids = env.h_ids
+        self.stds = env.std
 
-            factory = BoundModelFactory()
-            self.bounded_NNDM_H = factory.build(self.NNDM_H)
-            self.action_partitions = self.create_action_partitions(no_action_partitions)
-
-            if self.is_stochastic:
-                self.no_noise_partitions = no_noise_partitions
-                self.noise_partitions = self.create_noise_partitions()
+        factory = BoundModelFactory()
+        self.bounded_NNDM_H = factory.build(self.NNDM_H)
+        self.action_partitions = self.create_action_partitions(no_action_partitions)
+        if self.is_stochastic:
+            self.no_noise_partitions = no_noise_partitions
+            self.noise_partitions = self.create_noise_partitions()
 
     def safe_action(self, state: torch.tensor):
         h_cur = self.h_func(state)
@@ -106,8 +114,6 @@ class CBF:
         except IndexError:
             # no actions satisfied the CBF constraint
             raise InfeasibilityError()
-        else:
-            return action_space[constraint][idx]
     
     def create_action_partitions(self, partitions):
         num_actions = self.env.action_space.shape[0]
