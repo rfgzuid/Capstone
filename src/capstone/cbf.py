@@ -89,35 +89,25 @@ class CBF:
     def discrete_cbf(self, state):
         # Discrete(n) has actions {0, 1, ..., n-1} - see gymnasium docs
         action_space = torch.arange(self.env.action_space.n)
-        safe_actions = []
 
         h_cur = self.h_func(state)
 
-        for action in action_space:
-            h_input = torch.zeros((1, self.state_size + self.action_size))
-            h_input[:, :self.state_size] = state
-            h_input[:, self.state_size] = action
+        h_input = torch.zeros(self.env.action_space.n, self.state_size + self.action_size)
+        h_input[:, -1] = action_space
+        h_input[:, :-1] = state
 
-            h_next = self.NNDM_H(h_input)
+        h_next = self.NNDM_H(h_input)
 
-            if torch.all(h_next >= self.alpha * h_cur + self.delta).item():
-                safe_actions.append(action)
+        constraint = torch.all(h_next >= self.alpha * h_cur + self.delta, dim=1)
+        q_values = self.policy(state).squeeze()
 
-        if safe_actions and len(safe_actions) > 1:
-            q_values = self.policy(state).squeeze()
-            mask = torch.zeros_like(q_values, dtype=torch.bool)
-
-            for action in safe_actions:
-                mask[action] = True
-
-            safe_q_values = q_values.masked_fill(~mask, float('-inf'))
-            best_action = torch.argmax(safe_q_values)
-
-            return best_action.view(1, 1)
-        elif safe_actions:
-            return safe_actions[0].view(1, 1)
-        else:
+        try:
+            idx = torch.argmax(q_values[constraint]).item()
+        except IndexError:
+            # no actions satisfied the CBF constraint
             raise InfeasibilityError()
+        else:
+            return action_space[constraint][idx]
     
     def create_action_partitions(self, partitions):
         num_actions = self.env.action_space.shape[0]

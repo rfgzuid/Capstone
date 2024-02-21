@@ -10,9 +10,9 @@ from capstone.nndm import NNDM
 from capstone.dqn import DQN
 from capstone.ddpg import Actor
 
-env = Cartpole([0.001, 0.001, 0.01, 0.01])
+# env = Cartpole([0.001, 0.001, 0.01, 0.01])
 # env = DiscreteLunarLander([0.015, 0.015, 0.031415, 0.05, 0.05, 0.05])
-# env = ContinuousLunarLander([0.015, 0.015, 0.031415, 0.05, 0.05, 0.05])
+env = ContinuousLunarLander([0.015, 0.015, 0.031415, 0.05, 0.05, 0.05])
 
 
 def train(env):
@@ -32,16 +32,16 @@ def evaluate(env):
     nndm.load_state_dict(nndm_params)
 
     cbf = CBF(env, nndm, policy,
-              alpha=[0.5, 0.5],
-              delta=[0., 0.],
-              no_action_partitions=2,
-              no_noise_partitions=2,
-              stochastic=False)
+               alpha=[0.1, 0.1],
+               delta=[0., 0.],
+               no_action_partitions=2,
+               no_noise_partitions=2,
+               stochastic=True)
 
     evaluator = Evaluator(env, cbf)
 
     # evaluator.play(policy, True, cbf)
-    evaluator.plot(policy, 200)
+    evaluator.plot(policy, 1000)
 
 
 if __name__ == '__main__':
