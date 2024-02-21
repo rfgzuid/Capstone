@@ -87,7 +87,8 @@ class Evaluator:
             if terminated:
                 break
 
-        imageio.mimwrite(f'{self.env.spec.id}.gif', images, fps=50)
+        if gif:
+            imageio.mimwrite(f'{self.env.spec.id}.gif', images, fps=50)
         play_env.close()  # close the simulation environment
 
     def mc_simulate(self, agent, num_agents, cbf: CBF = None):

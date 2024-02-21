@@ -139,7 +139,7 @@ class CBF:
         return res
         
     def get_lower_bound(self, state, action_partition):
-        state_partition = HyperRectangle.from_eps(state.view(1, -1), 0.01)
+        state_partition = HyperRectangle.from_eps(state.view(1, -1), 1e-5)
 
         input_bounds = HyperRectangle(
             torch.cat((state_partition.lower, action_partition.lower), dim=1),
@@ -157,7 +157,7 @@ class CBF:
             (A, b) = self.get_lower_bound(state, action_partition)
             h_action_dependent = A[:, :, -action_dimensionality:]
             # State input region is a hyperrectangle with "radius" 0.01
-            state_input_bounds = HyperRectangle.from_eps(state, 0.01)
+            state_input_bounds = HyperRectangle.from_eps(state, 1e-5)
             # State dependent part of the A matrix
             state_a = A[:, :, :-action_dimensionality]
             # Make this into a (lower) linear bounds (\underbar{A}_x x + b \leq ...)
@@ -176,15 +176,15 @@ class CBF:
         nominal_action = self.policy(state).squeeze(0).detach()
         h_current = self.h_func(state)
         bound_matrices = self.create_bound_matrices(state)
-        return self.QP_solver(nominal_action, bound_matrices, h_current)
+        return self.qp_solver(nominal_action, bound_matrices, h_current)
     
     def continuous_scbf(self, state):
         nominal_action = self.policy(state).squeeze(0).detach()
         h_current = self.h_func(state)
         bound_matrices = self.create_noise_bounds(state)
-        return self.QP_solver(nominal_action, bound_matrices, h_current)
+        return self.qp_solver(nominal_action, bound_matrices, h_current)
 
-    def QP_solver(self, nominal_action, bound_matrices, h_current):
+    def qp_solver(self, nominal_action, bound_matrices, h_current):
         safe_actions = []
         for action_partition, h_action_dependent, h_vec in bound_matrices:
             num_actions = nominal_action.shape[0]
@@ -249,7 +249,7 @@ class CBF:
         res = []
         for action_partition in self.action_partitions:
             # state input region is a hyperrectangle with "radius" 0.01
-            state_input_bounds = HyperRectangle.from_eps(state.view(1, -1), 0.01)
+            state_input_bounds = HyperRectangle.from_eps(state.view(1, -1), 1e-5)
             # initialise the part of the bound on h that is dependent on the action
             h_action_dependent = torch.zeros(1, h_dim, len(self.u_inds))
             # initialise the part of the bound on h that is independent on the action

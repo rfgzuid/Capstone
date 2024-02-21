@@ -17,9 +17,11 @@ def log_prob(x, y):
     else:
         return np.log((erf(y) - erf(x))/2)
 
+
 def truncated_normal_expectation(mean, std_dev, lower_bound, upper_bound):
     a, b = (lower_bound - mean) / std_dev, (upper_bound - mean) / std_dev
     return mean + std_dev * (truncnorm.expect(args=(a, b), loc=mean, scale=std_dev))
+
 
 def weighted_noise_prob(HR, h_ids, stds):
     res = torch.zeros(len(h_ids))
@@ -27,6 +29,7 @@ def weighted_noise_prob(HR, h_ids, stds):
     for i in range(len(h_ids)):
         res[i] = (HR_prob * truncated_normal_expectation(0, stds[i], HR.lower[:, h_ids[i]], HR.upper[:, h_ids[i]]))
     return res
+
 
 def HR_probability(HR, h_ids, stds):
     lower_list = []
