@@ -200,7 +200,7 @@ class CBF:
             action_lower_bound = action_partition.lower.reshape((-1,))
             action_upper_bound = action_partition.upper.reshape((-1,))
             constraints = [action_lower_bound <= action, action <= action_upper_bound,
-                           (h_action_dependent @ action + h_vec).squeeze() >= self.alpha * h_current + self.delta]
+                           (h_action_dependent.reshape(-1, 1) @ action + h_vec).squeeze() >= self.alpha * h_current + self.delta]
 
             # Objective
             objective = cp.Minimize(cp.norm(action - nominal_action, 2))
