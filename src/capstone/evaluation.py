@@ -91,7 +91,7 @@ class Evaluator:
             imageio.mimwrite(f'{self.env.spec.id}.gif', images, fps=50)
         play_env.close()  # close the simulation environment
 
-    def mc_simulate(self, agent, num_agents, cbf: CBF = None):
+    def mc_simulate(self, agent, num_agents, cbf: CBF = None, seed=42):
         """
         Run a Monte Carlo simulation for [num_agents] agents
          - Returns a list of all h values and unsafe end frames
@@ -103,7 +103,7 @@ class Evaluator:
 
         for _ in tqdm(range(num_agents)):
             h_list = []
-            state, _ = self.env.reset(seed=42)
+            state, _ = self.env.reset(seed=seed)
             state = torch.tensor(state).unsqueeze(0)
 
             current_frame = 0
@@ -135,24 +135,24 @@ class Evaluator:
         self.env.close()
         return unsafe_frames, h_values
 
-    def plot(self, agent: DQN | Actor, n: int):
+    def plot(self, agent: DQN | Actor, n: int, seed=42):
         """
         For n agents, run a Monte Carlo simulation using mc_simulate() and then plot
         the tracked metrics (h values and unsafe frames) in comprehensive graphs
         - Includes also theoretical bounds for h and P_u according to CBF theory
         """
 
-        state, _ = self.env.reset(seed=42)  # set the initial state for all agents
+        state, _ = self.env.reset(seed=seed)  # set the initial state for all agents
         dimension_h = self.h_function(torch.tensor(state).unsqueeze(0)).shape[1]  # how many h_i do you have
 
         h_fig, h_ax = plt.subplots(dimension_h, 2)  # second column with cbf
         p_fig, p_ax = plt.subplots()
 
         print('Simulating agents without CBF')
-        end_frames, h_values = self.mc_simulate(agent, n, cbf=None)
+        end_frames, h_values = self.mc_simulate(agent, n, cbf=None, seed=seed)
 
         print('Simulating agents with CBF')
-        cbf_end_frames, cbf_h_values = self.mc_simulate(agent, n, cbf=self.cbf)
+        cbf_end_frames, cbf_h_values = self.mc_simulate(agent, n, cbf=self.cbf, seed=seed)
 
         P_u = []
 
