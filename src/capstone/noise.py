@@ -165,8 +165,8 @@ class DoubleIntegratorEnv(gym.Env):
         return next_state
 
 
-    def step(self, action: tuple[float, float]):
-        force = np.array([[action[0]], [action[1]]])
+    def step(self, action):
+        force = action
         self.state = self.stepPhysics(force)
         x = self.state[0].item()
         y = self.state[1].item()
