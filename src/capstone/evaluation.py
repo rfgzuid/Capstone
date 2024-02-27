@@ -91,7 +91,7 @@ class Evaluator:
             imageio.mimwrite(f'{self.env.spec.id}.gif', images, fps=50)
         play_env.close()  # close the simulation environment
 
-    def mc_simulate(self, agent, num_agents, cbf: CBF = None, seed=42):
+    def mc_simulate(self, agent, num_agents, cbf: CBF = None, seed=42, progress_bar=True):
         """
         Run a Monte Carlo simulation for [num_agents] agents
          - Returns a list of all h values and unsafe end frames
@@ -101,7 +101,7 @@ class Evaluator:
         h_values = []
         unsafe_frames = []
 
-        for _ in tqdm(range(num_agents)):
+        for _ in tqdm(range(num_agents), disable=not progress_bar):
             h_list = []
             state, _ = self.env.reset(seed=seed)
             state = torch.tensor(state).unsqueeze(0)
