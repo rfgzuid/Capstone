@@ -91,7 +91,7 @@ class Evaluator:
             imageio.mimwrite(f'{self.env.spec.id}.gif', images, fps=50)
         play_env.close()  # close the simulation environment
 
-    def mc_simulate(self, agent, num_agents, cbf: CBF = None, seed=42, progress_bar=True):
+    def mc_simulate(self, agent, num_agents, cbf_enabled=False, seed=42, progress_bar=True):
         """
         Run a Monte Carlo simulation for [num_agents] agents
          - Returns a list of all h values and unsafe end frames
@@ -114,9 +114,12 @@ class Evaluator:
                 h_list.append(h_tensor.squeeze().numpy())
 
                 # try cbf action - if cbf disabled or no safe actions available, just follow agent policy
-                try:
-                    action = cbf.safe_action(state)
-                except (AttributeError, InfeasibilityError):
+                if cbf_enabled:
+                    try:
+                        action = self.cbf.safe_action(state)
+                    except InfeasibilityError:
+                        action = agent.select_action(state, exploration=False)
+                else:
                     action = agent.select_action(state, exploration=False)
 
                 state, reward, terminated, truncated, _ = self.env.step(action.squeeze().detach().numpy())
@@ -149,10 +152,10 @@ class Evaluator:
         p_fig, p_ax = plt.subplots()
 
         print('Simulating agents without CBF')
-        end_frames, h_values = self.mc_simulate(agent, n, cbf=None, seed=seed)
+        end_frames, h_values = self.mc_simulate(agent, n, seed=seed)
 
         print('Simulating agents with CBF')
-        cbf_end_frames, cbf_h_values = self.mc_simulate(agent, n, cbf=self.cbf, seed=seed)
+        cbf_end_frames, cbf_h_values = self.mc_simulate(agent, n, cbf_enabled=True, seed=seed)
 
         P_u = []
 
