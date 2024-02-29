@@ -3,6 +3,7 @@ import numpy as np
 
 from gymnasium import spaces, logger
 from gymnasium.utils import seeding
+from gymnasium.spaces import Box
 
 from gymnasium.error import DependencyNotInstalled
 
@@ -77,7 +78,7 @@ class LunarLanderNoise(gym.Wrapper):
 class DoubleIntegratorEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 30}
 
-    def __init__(self, action_space = "continuous", render_mode="human", mass=1):
+    def __init__(self, action_space = "continuous", render_mode="human", mass=1.0):
         super(DoubleIntegratorEnv, self).__init__()
         self.mass_square = mass #kg
         self.Ts = 0.05 #s 
@@ -107,13 +108,10 @@ class DoubleIntegratorEnv(gym.Env):
         self.max_velocity = np.inf
         self.max_force = np.inf
 
-        self.observation_space = spaces.Dict(
-            {
-                "x position": spaces.Box(-self.max_distance, self.max_distance, shape=(1,), dtype=float),
-                "y position": spaces.Box(-self.max_distance, self.max_distance, shape=(1,), dtype=float),
-                "x velocity": spaces.Box(-self.max_velocity, self.max_velocity, shape=(1,), dtype=float),
-                "y velocity": spaces.Box(-self.max_velocity, self.max_velocity, shape=(1,), dtype=float)
-            }
+        self.observation_space = Box(
+            low = np.array([-self.max_distance, -self.max_distance, -self.max_velocity, -self.max_velocity]),
+            high = np.array([self.max_distance, self.max_distance, self.max_velocity, self.max_velocity]),
+            dtype=np.float32
         )
         self.continuous = None
 
@@ -124,11 +122,10 @@ class DoubleIntegratorEnv(gym.Env):
                 self.continuous = False
             else:
                 self.max_action = np.inf
-                self.action_space = spaces.Dict(
-                    {
-                        "x force": spaces.Box(-self.max_force, self.max_force, shape=(1,), dtype=float),
-                        "y force": spaces.Box(-self.max_force, self.max_force, shape=(1,), dtype=float)
-                    }
+                self.action_space = Box(
+                    low = np.array([-self.max_action, -self.max_action]),
+                    high = np.array([self.max_action, self.max_action]),
+                    dtype=np.float32
                 )
                 self.continuous = True
         else:
@@ -159,13 +156,13 @@ class DoubleIntegratorEnv(gym.Env):
         return distribution
     
     def stepPhysics(self, force):
-        force *= (1/self.mass_square)
         dk = self.random_gaussian_noise()
         next_state = np.matmul(self.A, self.state) + np.matmul(self.B, force) + dk
         return next_state
 
 
     def step(self, action):
+        """Action has to be numpy array of shape 2x1"""
         force = action
         self.state = self.stepPhysics(force)
         x = self.state[0].item()
