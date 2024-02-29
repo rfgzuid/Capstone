@@ -133,7 +133,6 @@ class DoubleIntegratorEnv(gym.Env):
 
         self.reward = 0.0
 
-        self.seed()
         self.screen_width = 600
         self.screen_height = 600
         self.screen = None
@@ -143,10 +142,6 @@ class DoubleIntegratorEnv(gym.Env):
 
         self.steps_beyond_done = None
 
-
-    def seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(None)
-        return [seed]
     
     def random_gaussian_noise(self):
         """Returns a sample of a random gaussian noise with zero mean"""
@@ -157,7 +152,7 @@ class DoubleIntegratorEnv(gym.Env):
     
     def stepPhysics(self, force):
         dk = self.random_gaussian_noise()
-        next_state = np.matmul(self.A, self.state) + np.matmul(self.B, force) + dk
+        next_state = np.matmul(self.state, self.A) + np.expand_dims(np.matmul(self.B, force),0) + dk.T
         return next_state
 
 
@@ -165,8 +160,13 @@ class DoubleIntegratorEnv(gym.Env):
         """Action has to be numpy array of shape 2x1"""
         force = action
         self.state = self.stepPhysics(force)
-        x = self.state[0].item()
-        y = self.state[1].item()
+        x = self.state[0][0].item()
+        y = self.state[0][1].item()
+        x_dot = self.state[0][2].item()
+        y_dot = self.state[0][3].item()
+
+        self.state = np.array([[x, y, x_dot, y_dot]], dtype=np.float32)
+
         terminated = x < -self.max_distance/2 or x > self.max_distance/2 or y < -self.max_distance/2 or y > self.max_distance/2
         terminated = bool(terminated)
 
@@ -188,9 +188,8 @@ Any further steps are undefined behavior.
         return self.state, self.reward, terminated, truncated, {}
 
     def reset(self, seed=None):
-        super().reset(seed=seed)
         x0, y0, x_dot0, y_dot0 = (0.0, 0.0, 0.0, 0.0) 
-        self.state = np.array([[x0], [y0], [x_dot0], [y_dot0]])
+        self.state = np.array([[x0, y0, x_dot0, y_dot0]], dtype=np.float32)
         self.steps_beyond_done = None
         return self.state, {}
 
