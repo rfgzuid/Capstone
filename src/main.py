@@ -32,7 +32,7 @@ def evaluate(env):
     nndm.load_state_dict(nndm_params)
 
     cbf = CBF(env, nndm, policy,
-              alpha=[0.9, 0.9],
+              alpha=[0.99, 0.99],
               delta=[0., 0.],
               no_action_partitions=4,
               no_noise_partitions=4,
@@ -41,7 +41,7 @@ def evaluate(env):
     evaluator = Evaluator(env, cbf)
 
     # evaluator.play(policy, True, cbf)
-    evaluator.plot(policy, 100)
+    evaluator.plot(policy, 5)
 
 
 if __name__ == '__main__':
