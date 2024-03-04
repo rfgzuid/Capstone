@@ -21,7 +21,6 @@ def log_prob(x, y):
 def truncated_normal_expectation(mean, std_dev, lower_bound, upper_bound):
     a, b = (lower_bound - mean) / std_dev, (upper_bound - mean) / std_dev
     res = mean + std_dev * (truncnorm.expect(args=(a, b), loc=mean, scale=std_dev))
-    print(res)
     return res
 
 
@@ -33,7 +32,6 @@ def test(mean, std, lower_bound, upper_bound):
     phi_b, psi_b = 1/(2*np.pi)**0.5 * np.exp(-b**2/2), 0.5 * (1 + erf(b/2**0.5))
 
     expectation = mean - std * (phi_b - phi_a)/(psi_b - psi_a)
-    print(mean + std * expectation)
 
 
 def weighted_noise_prob(HR, h_ids, stds):
