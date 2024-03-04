@@ -147,17 +147,18 @@ class DoubleIntegratorEnv(gym.Env):
         """Returns a sample of a random gaussian noise with zero mean"""
         Q = np.matmul(self.B, self.B.T)
         distribution = np.random.multivariate_normal(np.array([0,0,0,0]), Q)
-        distribution = distribution.reshape((1,4))
+        distribution = distribution.reshape((4,1))
         return distribution
     
     def stepPhysics(self, force):
         dk = self.random_gaussian_noise()
-        next_state = np.matmul(self.state, self.A) + np.expand_dims(np.matmul(self.B, force),0) + dk
+        next_state = np.matmul(self.A, self.state.T) + np.matmul(self.B, force.T) + dk
+        next_state = next_state.T
         return next_state
 
 
     def step(self, action):
-        """Action has to be numpy array of shape 2x1"""
+        """Action has to be numpy array of shape 1x2"""
         force = action
         self.state = self.stepPhysics(force)
         x = self.state[0][0].item()
@@ -244,8 +245,8 @@ Any further steps are undefined behavior.
 
         l, r, t, b = -cartwidth / 2, cartwidth / 2, cartheight / 2, -cartheight / 2
         axleoffset = cartheight / 4.0
-        cartx = x[0][0] * scale_x + origin_x 
-        carty = x[0][1] * scale_y + origin_y 
+        cartx = x[0][0].item() * scale_x + origin_x 
+        carty = x[0][1].item() * scale_y + origin_y 
         cart_coords = [(l, b), (l, t), (r, t), (r, b)]
         cart_coords = [(c[0] + cartx, c[1] + carty) for c in cart_coords]
 
