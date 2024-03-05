@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-from scipy.stats import truncnorm
 from scipy.special import erf, erfc
 
 
