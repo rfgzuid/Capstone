@@ -31,7 +31,9 @@ def test(mean, std, lower_bound, upper_bound):
     phi_a, psi_a = 1 / (2 * np.pi) ** 0.5 * np.exp(-a ** 2 / 2), 0.5 * (1 + erf(a / 2 ** 0.5))
     phi_b, psi_b = 1/(2*np.pi)**0.5 * np.exp(-b**2/2), 0.5 * (1 + erf(b/2**0.5))
 
-    expectation = mean - std * (phi_b - phi_a)/(psi_b - psi_a)
+    expectation = mean - std * (phi_b - phi_a)/(np.exp(log_prob(b,a)))
+    return expectation
+
 
 
 def weighted_noise_prob(HR, h_ids, stds):
