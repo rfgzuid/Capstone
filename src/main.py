@@ -32,7 +32,7 @@ def evaluate(env):
     nndm.load_state_dict(nndm_params)
 
     cbf = CBF(env, nndm, policy,
-              alpha=[0.99, 0.99],
+              alpha=[0.98, 0.98],
               delta=[0., 0.],
               no_action_partitions=4,
               no_noise_partitions=4,
