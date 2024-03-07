@@ -41,7 +41,7 @@ def evaluate(env):
     evaluator = Evaluator(env, cbf)
 
     # evaluator.play(policy, True, cbf)
-    evaluator.plot(policy, 5)
+    evaluator.plot(policy, 1000)
 
 
 if __name__ == '__main__':

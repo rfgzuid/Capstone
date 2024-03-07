@@ -44,21 +44,16 @@ def truncated_normal_expectation_batched(mean, std, lower_bound, upper_bound):
 def weighted_noise_prob_batched(HR, h_ids, stds):
     # First, compute the batched probability for the noise partitions.
     HR_prob = HR_probability_batched(HR, h_ids, stds)
-    
     # Now, compute the expectation for the noise partitions.
     # Note: mean is assumed to be 0 for all partitions here, can be adjusted if different.
     mean = torch.zeros(1, device=HR.lower.device)
-    std_tensor = torch.tensor(stds, device=HR.lower.device, dtype=HR.lower.dtype).unsqueeze(0)
-    
+    std_tensor = torch.tensor(stds, device=HR.lower.device, dtype=HR.lower.dtype)
     # Ensure lower_bound and upper_bound are correctly selected for h_ids and reshaped.
-    lower_bound = HR.lower[:, :, h_ids].squeeze()
-    upper_bound = HR.upper[:, :, h_ids].squeeze()
-    
+    lower_bound = HR.lower[..., h_ids]
+    upper_bound = HR.upper[..., h_ids]
     expectation = truncated_normal_expectation_batched(mean, std_tensor, lower_bound, upper_bound)
-
     # Multiplying the probabilities with the expectations, element-wise.
-    weighted_noise_proba = HR_prob.view(-1, 1) * expectation.squeeze()  # Ensure shapes are aligned.
-    
+    weighted_noise_proba = HR_prob.view(-1, 1) * expectation
     return weighted_noise_proba
 
 
@@ -84,21 +79,18 @@ def HR_probability(HR, h_ids, stds):
 
 def HR_probability_batched(HR, h_ids, stds):
     if not isinstance(stds, torch.Tensor):
-        stds = torch.tensor(stds, device=HR.lower.device, dtype=HR.lower.dtype).unsqueeze(0).unsqueeze(0)
-    
+        # No need to unsqueeze - broadcast (since the relevant indexing is in the last dimension) will take care of it
+        # https://pytorch.org/docs/stable/notes/broadcasting.html
+        stds = torch.tensor(stds, device=HR.lower.device, dtype=HR.lower.dtype)
     # Correcting for the provided shape of HR.lower and HR.upper
-    lower_normalized = HR.lower[:, :, h_ids] / stds
-    upper_normalized = HR.upper[:, :, h_ids] / stds
-
+    lower_normalized = HR.lower[..., h_ids] / stds
+    upper_normalized = HR.upper[..., h_ids] / stds
     # Compute log probabilities in a batched manner
     log_probs = log_prob_batched(upper_normalized, lower_normalized)
-
     # Sum log probabilities across the h_ids dimensions
     log_prob_sum = torch.sum(log_probs, dim=-1)  # Summing across the last dimension
-
     # Convert log probabilities back to probabilities
-    prob = torch.exp(log_prob_sum).squeeze()  # Squeezing to remove any singleton dimensions
-
+    prob = torch.exp(log_prob_sum)
     return prob
 
 def log_prob_batched(x, y):

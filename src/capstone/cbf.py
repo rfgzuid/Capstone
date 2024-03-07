@@ -224,30 +224,31 @@ class CBF:
             raise InfeasibilityError()
         
     def create_noise_partitions(self):
-        # Define the limits for partitioning
-        partitions_lower = [-7 * std for std in self.stds]
-        partitions_upper = [7 * std for std in self.stds]
-        # Create the partition slices for each dimension in h_ids
-        partition_slices = []
-        for dim_num_slices, dim_min, dim_max in zip([self.no_noise_partitions] * len(self.h_ids),
-                                                    partitions_lower, partitions_upper):
-            dim = torch.linspace(dim_min, dim_max, dim_num_slices + 1)
-            centers = (dim[:-1] + dim[1:]) / 2
-            half_widths = (dim[1:] - dim[:-1]) / 2
-            partition_slices.append(list(zip(centers, half_widths)))
-
-        # Create all combinations of partitions across the dimensions in h_ids
-        hyperrectangles = []
-        for combination in product(*partition_slices):
-            lower_bounds = torch.zeros((1, self.state_size))
-            upper_bounds = torch.zeros((1, self.state_size))
-
-            for (center, half_width), h_id in zip(combination, self.h_ids):
-                lower_bounds[0, h_id] = center - half_width
-                upper_bounds[0, h_id] = center + half_width
-
-            hyperrectangles.append(HyperRectangle(lower_bounds, upper_bounds))
-        return hyperrectangles
+            # Define the limits for partitioning
+            partitions_lower = [-7 * std for std in self.stds]
+            partitions_upper = [7 * std for std in self.stds]
+            # Create the partition slices for each dimension in h_ids
+            partition_slices = []
+            for dim_num_slices, dim_min, dim_max in zip([self.no_noise_partitions] * len(self.h_ids),
+                                                        partitions_lower, partitions_upper):
+                dim = torch.linspace(dim_min, dim_max, dim_num_slices + 1)
+                centers = (dim[:-1] + dim[1:]) / 2
+                half_widths = (dim[1:] - dim[:-1]) / 2
+                partition_slices.append(list(zip(centers, half_widths)))
+            # Create all combinations of partitions across the dimensions in h_ids
+            hyperrectangles = []
+            for combination in product(*partition_slices):
+                lower_bounds = torch.zeros(self.state_size)
+                upper_bounds = torch.zeros(self.state_size)
+                for (center, half_width), h_id in zip(combination, self.h_ids):
+                    lower_bounds[h_id] = center - half_width
+                    upper_bounds[h_id] = center + half_width
+                hyperrectangles.append(HyperRectangle(lower_bounds, upper_bounds))
+            hyperrectangles = HyperRectangle(
+                torch.stack([rect.lower for rect in hyperrectangles]),
+                torch.stack([rect.upper for rect in hyperrectangles]),
+            )
+            return hyperrectangles
 
     def create_noise_bounds(self, state):
         # h_ids are the dimensions of the state that are used in h
@@ -308,85 +309,61 @@ class CBF:
             
         return res
 
+    # Add this decorator to avoid any need for detach and all that
+    @torch.no_grad()
     def create_noise_bounds_batched(self, state):
-        h_dim = len(self.h_ids)
-        
-        # Batch actions and noise
-        # Stack action_partitions and noise_partitions tensors along new dimensions
-        actions_lower = torch.stack([ap.lower for ap in self.action_partitions])
-        actions_upper = torch.stack([ap.upper for ap in self.action_partitions])
+        # Batch noise - do this outside the action_partitions loop as they are independent of the action partition
+        # Stack noise_partitions tensors along new dimensions
         noise_lower = torch.stack([np.lower for np in self.noise_partitions])
         noise_upper = torch.stack([np.upper for np in self.noise_partitions])
-
-        # State input region is a hyperrectangle with "radius" 0.01, adjusted for batch
-        state_input_bounds = HyperRectangle.from_eps(state.unsqueeze(0).unsqueeze(0), 1e-10)
-        
-        # Initialize tensors for batching
-        h_action_dependent = torch.zeros(len(self.noise_partitions), len(self.action_partitions), h_dim, len(self.u_inds))
-        h_vec = torch.zeros(len(self.noise_partitions), len(self.action_partitions), h_dim)
-        
-        # Normalize the shapes
-        state_input_bounds_lower = state_input_bounds.lower.squeeze().unsqueeze(0)
-        state_input_bounds_upper = state_input_bounds.upper.squeeze().unsqueeze(0)
-
-        # setup the batched input bounds
-        input_bounds_lower = torch.cat((
-            state_input_bounds_lower.unsqueeze(0).unsqueeze(0).repeat(len(self.noise_partitions), len(self.action_partitions), 1, 1),
-            actions_lower.unsqueeze(0).repeat(len(self.noise_partitions), 1, 1, 1),
-            noise_lower.unsqueeze(1).repeat(1, len(self.action_partitions), 1, 1)
-        ), dim=3)
-
-        input_bounds_upper = torch.cat((
-            state_input_bounds_upper.unsqueeze(0).unsqueeze(0).repeat(len(self.noise_partitions), len(self.action_partitions), 1, 1),
-            actions_upper.unsqueeze(0).repeat(len(self.noise_partitions), 1, 1, 1),
-            noise_upper.unsqueeze(1).repeat(1, len(self.action_partitions), 1, 1)
-        ), dim=3)
-        
-        input_bounds = HyperRectangle(input_bounds_lower, input_bounds_upper)
-        crown_bounds = self.bounded_NNDM_H.crown(input_bounds, bound_upper=False)
-
-        # Get the lower bounds
-        (A, b) = crown_bounds.lower
-
-        # Create batched hyperrectangle from noise partitions
-        noise_partition_lowers = torch.stack([npa.lower for npa in self.noise_partitions])
-        noise_partition_uppers = torch.stack([npa.upper for npa in self.noise_partitions])
-        noise_partitions_hr = HyperRectangle(noise_partition_lowers, noise_partition_uppers)
-
+        noise_partitions_hr = HyperRectangle(noise_lower, noise_upper)
+        # compute the probability of the noise falling in the given partition of the noise space
         noise_probs = HR_probability_batched(noise_partitions_hr, self.h_ids, self.stds)
         # Reshape noise_prob for broadcasting
-        noise_probs = noise_probs.view(-1, 1, 1, 1, 1)
-
-        # State, action, and noise dependent part of the A matrix
-        state_A = A[:, :, :, :, self.x_inds]
-        action_A = A[:, :, :, :, self.u_inds]
-        noise_A = A[:, :, :, :, self.w_inds]
-        # Scale A and b with noise_prob, batch-wise
-        state_A = state_A * noise_probs
-        b = b * noise_probs
-
-        # Compute the weighted noise probability in a batched manner
+        noise_probs = noise_probs.view(-1, 1)
+        # compute \int_{HR_{wi}} w \, p(w) \, dw
         weighted_noise_proba = weighted_noise_prob_batched(noise_partitions_hr, self.h_ids, self.stds)
-        #TODO
-
-
-
-
-# # Compute noise_vec for each partition, and calculate h_vec_noise
-# # This requires constructing noise_vec for each partition in a batched manner
-# noise_vec = torch.zeros((len(self.noise_partitions), self.state_size), device=A.device)
-# for i, ind in enumerate(self.h_ids):
-#     noise_vec[:, ind] = weighted_noise_proba[:, i]
-
-# h_vec_noise = torch.einsum('bnm,bm->bn', noise_A, noise_vec)
-
-# # Update h_vec with h_vec_state (derived from state_A, b scaling) and h_vec_noise
-# h_vec += h_vec_noise
-
-# # Scale action_A with noise_prob, batch-wise, and update h_action_dependent
-# h_action_dependent += action_A * noise_probs.unsqueeze(-1)
-
-# # Convert h_action_dependent and h_vec to the desired format, if necessary, and return them
-# # Note: The final return format depends on how you wish to use these tensors downstream
-
-# return h_action_dependent, h_vec
+        noise_vec = torch.zeros((weighted_noise_proba.size(0), self.state_size, 1), device=noise_lower.device)
+        noise_vec[:, self.h_ids, 0] = weighted_noise_proba
+        # state input region is a hyperrectangle with "radius" 0.01
+        state_input_bounds = HyperRectangle.from_eps(state.view(1, -1), 1e-10)
+        res = []
+        for action_partition in self.action_partitions:
+            # Set up the batched input bounds
+            input_bounds_lower = torch.cat((
+                state_input_bounds.lower.repeat(len(self.noise_partitions), 1),
+                action_partition.lower.repeat(len(self.noise_partitions), 1),
+                noise_lower
+            ), dim=-1)
+            input_bounds_upper = torch.cat((
+                state_input_bounds.upper.repeat(len(self.noise_partitions), 1),
+                action_partition.upper.repeat(len(self.noise_partitions), 1),
+                noise_upper
+            ), dim=-1)
+            # Dims of input bounds: [noise partition number, value]
+            input_bounds = HyperRectangle(input_bounds_lower, input_bounds_upper)
+            crown_bounds = self.bounded_NNDM_H.crown(input_bounds, bound_upper=False)
+            # Get the lower bounds
+            (A, b) = crown_bounds.lower
+            # State, action, and noise dependent part of the A matrix
+            state_A = A[..., self.x_inds]
+            action_A = A[..., self.u_inds]
+            noise_A = A[..., self.w_inds]
+            # Scale state_A and b corresponding to noise_prob - need unsqueeze for A as it has one addition dimensions
+            state_A, b = noise_probs.unsqueeze(-1) * state_A, noise_probs * b
+            # Make this into a (lower) linear bounds (\underbar{A}_x x + b \leq ...)
+            state_linear_bounds = LinearBounds(state_input_bounds, (state_A, b), None)
+            # Convert to lower interval bounds (b \leq ...)
+            state_interval_bounds = state_linear_bounds.concretize()
+            # Select the lower bound
+            h_vec_state = state_interval_bounds.lower
+            # The part of the bound on h that is dependent on the noise
+            h_vec_noise = noise_A.matmul(noise_vec).squeeze(-1)
+            # The part of the bound on h that is independent on the action
+            # dim=-2 is the noise partition dimension
+            # (hence corresponding to the previous for loop where you summed over those)
+            h_vec = (h_vec_state + h_vec_noise).sum(dim=-2)
+            # The weighted part of the bound on h that is dependent on the action
+            h_action_dependent = (noise_probs.unsqueeze(-1) * action_A).sum(dim=-3)
+            res.append((action_partition, h_action_dependent.numpy(), h_vec.numpy()))
+        return res
