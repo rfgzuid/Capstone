@@ -34,14 +34,14 @@ def evaluate(env):
     cbf = CBF(env, nndm, policy,
               alpha=[0.98, 0.98],
               delta=[0., 0.],
-              no_action_partitions=4,
-              no_noise_partitions=4,
+              no_action_partitions=8,
+              no_noise_partitions=8,
               stochastic=True)
 
     evaluator = Evaluator(env, cbf)
 
     # evaluator.play(policy, True, cbf)
-    evaluator.plot(policy, 1000)
+    evaluator.plot(policy, 5, seed=42)
 
 
 if __name__ == '__main__':

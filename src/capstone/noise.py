@@ -76,12 +76,12 @@ class LunarLanderNoise(gym.Wrapper):
 # Based on https://arxiv.org/abs/2302.07469
 
 class DoubleIntegratorEnv(gym.Env):
-    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 30}
+    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 20}
 
     def __init__(self, action_space = "continuous", render_mode="human", mass=1.0):
         super(DoubleIntegratorEnv, self).__init__()
-        self.mass_square = mass #kg
-        self.Ts = 0.05 #s 
+        self.mass_square = mass  # kg
+        self.Ts = 0.05  #s
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
