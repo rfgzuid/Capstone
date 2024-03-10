@@ -17,6 +17,55 @@ def log_prob(x, y):
         return np.log((erf(y) - erf(x))/2)
 
 
+def diagonalize_symmetric_matrix(A):
+    """
+    Diagonalizes a symmetric matrix A.
+    Returns P, D such that A = P @ D @ P.T,
+    where D is a diagonal matrix and P is an orthogonal matrix.
+
+    Parameters:
+    - A: numpy array representing a symmetric matrix.
+
+    Returns:
+    - P: Orthogonal matrix where columns are eigenvectors of A.
+    - D: Diagonal matrix containing eigenvalues of A.
+    """
+    # Ensure A is a numpy array
+    A = np.array(A)
+
+    # Compute the eigenvalues and eigenvectors of A
+    eigenvalues, eigenvectors = np.linalg.eigh(A)
+
+    # D is a diagonal matrix of the eigenvalues
+    D = np.diag(eigenvalues)
+
+    # P is the matrix of eigenvectors
+    P = eigenvectors
+
+    return P, D
+
+
+def correlated_truncated_normal_expectation(mean, covariance, lower_bound, upper_bound):
+    P, D = diagonalize_symmetric_matrix(covariance)
+    P_T = P.T
+    new_lower = P_T * HR.lower
+    new_upper = P_T * HR.upper
+    stds = np.diag(D)
+    mean = np.zeros(D.shape[0])
+    return P * truncated_normal_expectation(mean, stds, new_lower, new_upper)
+
+
+def correlated_HR_probability(HR, cov):
+    P, D = diagonalize_symmetric_matrix(cov)
+    P_T = P.T
+    new_lower = P_T * HR.lower
+    new_upper = P_T * HR.upper
+    new_HR = HyperRectangle(new_lower, new_upper)
+    stds = np.diag(D)
+    h_ids = [i for i in range(D.shape[0])]
+    return HR_probability(new_HR, h_ids, stds)
+
+
 def truncated_normal_expectation(mean, std, lower_bound, upper_bound):
     # https://en.wikipedia.org/wiki/Truncated_normal_distribution
     a, b = (lower_bound - mean) / std, (upper_bound - mean) / std
