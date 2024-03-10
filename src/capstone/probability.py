@@ -48,18 +48,18 @@ def diagonalize_symmetric_matrix(A):
 def correlated_truncated_normal_expectation(mean, covariance, lower_bound, upper_bound):
     P, D = diagonalize_symmetric_matrix(covariance)
     P_T = P.T
-    new_lower = P_T * HR.lower
-    new_upper = P_T * HR.upper
+    new_lower = np.matmul(P_T, HR.lower)
+    new_upper = np.matmul(P_T, HR.upper)
     stds = np.diag(D)
     mean = np.zeros(D.shape[0])
-    return P * truncated_normal_expectation(mean, stds, new_lower, new_upper)
+    return np.matmul(P, truncated_normal_expectation(mean, stds, new_lower, new_upper))
 
 
 def correlated_HR_probability(HR, cov):
     P, D = diagonalize_symmetric_matrix(cov)
     P_T = P.T
-    new_lower = P_T * HR.lower
-    new_upper = P_T * HR.upper
+    new_lower = np.matmul(P_T, HR.lower)
+    new_upper = np.matmul(P_T, HR.upper)
     new_HR = HyperRectangle(new_lower, new_upper)
     stds = np.diag(D)
     h_ids = [i for i in range(D.shape[0])]
