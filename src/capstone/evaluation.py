@@ -91,7 +91,7 @@ class Evaluator:
             imageio.mimwrite(f'{self.env.spec.id}.gif', images, fps=50)
         play_env.close()  # close the simulation environment
 
-    def mc_simulate(self, agent, num_agents, cbf_enabled=False, seed=42, progress_bar=True):
+    def mc_simulate(self, agent, num_agents, cbf_enabled=False, seed=None, progress_bar=True):
         """
         Run a Monte Carlo simulation for [num_agents] agents
          - Returns a list of all h values and unsafe end frames
@@ -138,7 +138,7 @@ class Evaluator:
         self.env.close()
         return unsafe_frames, h_values
 
-    def plot(self, agent: DQN | Actor, n: int, seed=42):
+    def plot(self, agent: DQN | Actor, n: int, seed=None):
         """
         For n agents, run a Monte Carlo simulation using mc_simulate() and then plot
         the tracked metrics (h values and unsafe frames) in comprehensive graphs
