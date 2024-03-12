@@ -8,3 +8,5 @@ torch
 tqdm
 imageio
 snakeviz
+bound_propagation
+osqp

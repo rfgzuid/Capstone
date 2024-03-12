@@ -1,3 +1,6 @@
+from multiprocessing import Pool
+from functools import partial
+
 from .settings import Env
 from .dqn import DQN
 from .ddpg import Actor
@@ -9,7 +12,11 @@ from bound_propagation import BoundModelFactory, HyperRectangle
 from bound_propagation.bounds import LinearBounds
 
 import torch
+import scipy
+import numpy as np
+
 import cvxpy as cp
+import osqp
 
 from itertools import product
 
@@ -182,39 +189,24 @@ class CBF:
         nominal_action = self.policy(state).squeeze(0).detach()
         h_current = self.h_func(state)
         bound_matrices = self.create_bound_matrices(state)
-        return self.qp_solver(nominal_action, bound_matrices, h_current)
+        return self.multi_qp_solver(nominal_action, bound_matrices, h_current)
     
     def continuous_scbf(self, state):
         nominal_action = self.policy(state).squeeze(0).detach()
         h_current = self.h_func(state)
         bound_matrices = self.create_noise_bounds_batched(state)
-        return self.qp_solver(nominal_action, bound_matrices, h_current)
+        return self.multi_qp_solver(nominal_action, bound_matrices, h_current)
 
-    def qp_solver(self, nominal_action, bound_matrices, h_current):
-        safe_actions = []
-        for action_partition, h_action_dependent, h_vec in bound_matrices:
-            num_actions = nominal_action.shape[0]
-            action = cp.Variable(num_actions)
+    def multi_qp_solver(self, nominal_action, bound_matrices, h_current):
+        num_actions = nominal_action.shape[0]
+        nominal_action = nominal_action.numpy()
 
-            # Constraints
-            action_lower_bound = action_partition.lower.reshape((-1,))
-            action_upper_bound = action_partition.upper.reshape((-1,))
-            constraints = [action_lower_bound <= action, action <= action_upper_bound,
-                           h_action_dependent.reshape(-1, action.shape[0]) @ action + h_vec >= (self.alpha * h_current + self.delta).squeeze()]
+        with Pool(8) as p:
+            safe_actions = p.map(
+                partial(self.qp_solver, h_current=h_current, num_actions=num_actions, nominal_action=nominal_action),
+                bound_matrices)
 
-            # Objective
-            objective = cp.Minimize(cp.norm(action - nominal_action, 2))
-
-            # Solve the problem, using ECOS as the default solver for small scale QP
-            problem = cp.Problem(objective, constraints)
-            problem.solve(solver='ECOS')
-
-            if problem.status is cp.UNBOUNDED:
-                print("something goes very wrong")
-            elif problem.status is cp.INFEASIBLE:
-                pass
-            else:
-                safe_actions.append((action.value, objective.value))
+        safe_actions = [safe_action for safe_action in safe_actions if isinstance(safe_action, tuple)]
 
         if safe_actions and len(safe_actions) > 1:
             return torch.tensor(min(safe_actions, key=lambda x: x[1], default=(None, None))[0])
@@ -222,7 +214,33 @@ class CBF:
             return torch.tensor(safe_actions[0][0])
         else:
             raise InfeasibilityError()
-        
+
+    def qp_solver(self, x, h_current, num_actions, nominal_action):
+        action_partition, h_action_dependent, h_vec = x
+
+        # See https://osqp.org/docs/solver/index.html
+        model = osqp.OSQP()
+
+        P = 2 * scipy.sparse.eye(num_actions, format='csc')
+        A = scipy.sparse.block_array([
+            [scipy.sparse.eye(num_actions, format='csc')],
+            [scipy.sparse.csc_matrix(h_action_dependent)]
+        ], format='csc')
+
+        q = -2 * nominal_action
+        l = np.concatenate([action_partition.lower[0], self.alpha * h_current[0] + self.delta - h_vec])
+        u = np.concatenate([action_partition.upper[0], np.full_like(h_current[0], np.inf)])
+
+        model.setup(P=P, q=q, A=A, l=l, u=u, verbose=False)
+        result = model.solve()
+
+        if result.info.status == 'solved':  # Solved
+            return (result.x, result.info.obj_val)
+        elif result.info.status == 'primal infeasible':
+            return None
+        else:
+            return "Something has gone very wrong"
+
     def create_noise_partitions(self):
             # Define the limits for partitioning
             partitions_lower = [-7 * std for std in self.stds]
