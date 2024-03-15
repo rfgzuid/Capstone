@@ -162,7 +162,7 @@ cbf = CBF(env, nndm, policy,
           alpha=[alpha],
           delta=[psi],
           no_action_partitions=8,
-          no_noise_partitions=32,
+          no_noise_partitions=8,
           stochastic=True)
 
 evaluator = Evaluator(env, cbf)
@@ -216,7 +216,7 @@ def state_space_plot(interp_resolution, num_agents=500):
                     if -(3/2)**0.5 * np.pi/6 <= x <= (3/2)**0.5 * np.pi/6]
 
     # points to evaluate simulation at
-    x, y = np.linspace(-0.7, 0.7, 7), np.linspace(-0.7, 0.7, 15)
+    x, y = np.linspace(-0.7, 0.7, 5), np.linspace(-0.7, 0.7, 15)
     xg, yg = np.meshgrid(x, y)
 
     experimental = p_u_experimental(xg, yg, num_agents)
