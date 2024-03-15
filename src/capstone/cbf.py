@@ -207,7 +207,7 @@ class CBF:
 
             # Solve the problem, using ECOS as the default solver for small scale QP
             problem = cp.Problem(objective, constraints)
-            problem.solve(solver='ECOS')
+            problem.solve(solver='OSQP')
 
             if problem.status is cp.UNBOUNDED:
                 print("something goes very wrong")
