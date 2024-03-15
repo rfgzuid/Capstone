@@ -118,7 +118,8 @@ class Evaluator:
                     try:
                         action = self.cbf.safe_action(state)
                     except InfeasibilityError:
-                        action = agent.select_action(state, exploration=False)
+                        print('SCBF infeasibility - change no. partitions')
+                        break
                 else:
                     action = agent.select_action(state, exploration=False)
 
