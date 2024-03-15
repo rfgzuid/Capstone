@@ -48,8 +48,8 @@ def diagonalize_symmetric_matrix(A):
 def correlated_truncated_normal_expectation(mean, covariance, lower_bound, upper_bound):
     P, D = diagonalize_symmetric_matrix(covariance)
     P_T = P.T
-    new_lower = np.matmul(P_T, HR.lower)
-    new_upper = np.matmul(P_T, HR.upper)
+    new_lower = np.matmul(P_T, lower_bound)
+    new_upper = np.matmul(P_T, upper_bound)
     stds = np.diag(D)
     mean = np.zeros(D.shape[0])
     return np.matmul(P, truncated_normal_expectation(mean, stds, new_lower, new_upper))
