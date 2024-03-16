@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from bound_propagation import HyperRectangle
 from scipy.special import erf, erfc
 
 

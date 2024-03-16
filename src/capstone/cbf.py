@@ -197,7 +197,9 @@ class CBF:
             action = cp.Variable(num_actions)
 
             v = action - nominal_action
-            objective = cp.Minimize(cp.quad_form(v, torch.eye(2)))
+            # objective = cp.Minimize(cp.quad_form(v, torch.eye(2)))
+
+            objective = cp.Minimize(cp.norm(action - nominal_action, 2))
 
             # Constraints
             action_lower_bound = action_partition.lower.reshape((-1,))
@@ -208,7 +210,7 @@ class CBF:
 
             # Solve the problem, using ECOS as the default solver for small scale QP
             problem = cp.Problem(objective, constraints)
-            problem.solve(solver='OSQP', verbose=True)
+            problem.solve(solver='CLARABEL', verbose=False)
 
             if problem.status is cp.UNBOUNDED:
                 print("something goes very wrong")
