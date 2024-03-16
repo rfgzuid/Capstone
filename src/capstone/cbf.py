@@ -196,18 +196,19 @@ class CBF:
             num_actions = nominal_action.shape[0]
             action = cp.Variable(num_actions)
 
+            v = action - nominal_action
+            objective = cp.Minimize(cp.quad_form(v, torch.eye(2)))
+
             # Constraints
             action_lower_bound = action_partition.lower.reshape((-1,))
             action_upper_bound = action_partition.upper.reshape((-1,))
-            constraints = [action_lower_bound <= action, action <= action_upper_bound,
+            constraints = [action_lower_bound <= action,
+                           action <= action_upper_bound,
                            h_action_dependent.reshape(-1, action.shape[0]) @ action + h_vec >= (self.alpha * h_current + self.delta).squeeze()]
-
-            # Objective
-            objective = cp.Minimize(cp.norm(action - nominal_action, 2))
 
             # Solve the problem, using ECOS as the default solver for small scale QP
             problem = cp.Problem(objective, constraints)
-            problem.solve(solver='OSQP')
+            problem.solve(solver='OSQP', verbose=True)
 
             if problem.status is cp.UNBOUNDED:
                 print("something goes very wrong")
