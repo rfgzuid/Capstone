@@ -44,7 +44,7 @@ class DoubleIntegratorEnv(gym.Env):
         self.state = np.array([x, y, xdot, ydot], dtype=np.float32)
         return self.state, 0., False, False, {}
 
-    def reset(self, seed=None):
+    def reset(self, seed=None, options=None):
         if seed is None:
             self.state = np.zeros((4,), dtype=np.float32)
         else:
