@@ -8,13 +8,13 @@ def log_prob(x, y):
         x, y = y, x
     x, y = x/np.sqrt(2), y/np.sqrt(2)
     if abs(x) <= 1/np.sqrt(2) and abs(y) <= 1/np.sqrt(2):
-        return np.log((erf(y) - erf(x))/2)
+        return (erf(y) - erf(x))/2
     elif x >= 0 and y >= 0:
-        return np.log((erfc(x) - erfc(y))/2)
+        return (erfc(x) - erfc(y))/2
     elif x <= 0 and y <= 0:
-        return np.log((erfc(-y) - erfc(-x))/2)
+        return (erfc(-y) - erfc(-x))/2
     else:
-        return np.log((erf(y) - erf(x))/2)
+        return (erf(y) - erf(x))/2
 
 
 def diagonalize_symmetric_matrix(A):
@@ -123,8 +123,8 @@ def HR_probability(HR, h_ids, stds):
         upper_list += [HR.upper[:, h_ids[i]]/stds[i]]
     prob = 0
     for j in range(len_vector):
-        prob += (log_prob(upper_list[j], lower_list[j]))
-    return np.exp(prob)
+        prob *= (log_prob(upper_list[j], lower_list[j]))
+    return prob
 
 def HR_probability_batched(HR, h_ids, stds):
     if not isinstance(stds, torch.Tensor):
