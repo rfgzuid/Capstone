@@ -11,8 +11,8 @@ from capstone.dqn import DQN
 from capstone.ddpg import Actor
 
 #env = Cartpole([0.001, 0.001, 0.01, 0.01])
-env = DiscreteLunarLander([0.015, 0.015, 0.031415, 0.05, 0.05, 0.05])
-#env = ContinuousLunarLander([0.015, 0.015, 0.031415, 0.05, 0.05, 0.05])
+#env = DiscreteLunarLander([0.015, 0.015, 0.031415, 0.05, 0.05, 0.05])
+env = ContinuousLunarLander([0.015, 0.015, 0.031415, 0.05, 0.05, 0.05])
 
 
 def train(env):

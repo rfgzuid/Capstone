@@ -137,9 +137,8 @@ def HR_probability_batched(HR, h_ids, stds):
     # Compute log probabilities in a batched manner
     log_probs = log_prob_batched(upper_normalized, lower_normalized)
     # Sum log probabilities across the h_ids dimensions
-    log_prob_sum = torch.sum(log_probs, dim=-1)  # Summing across the last dimension
+    prob = torch.prod(log_probs, dim=-1)  # Summing across the last dimension
     # Convert log probabilities back to probabilities
-    prob = torch.exp(log_prob_sum)
     return prob
 
 def log_prob_batched(x, y):
@@ -159,15 +158,15 @@ def log_prob_batched(x, y):
     
     # Compute probabilities using error functions and their complements
     mask1 = (torch.abs(x) <= 1/torch.sqrt(torch.tensor(2.0))) & (torch.abs(y) <= 1/torch.sqrt(torch.tensor(2.0)))
-    result[mask1] = torch.log((erf(y[mask1]) - erf(x[mask1])) / 2)
+    result[mask1] = (erf(y[mask1]) - erf(x[mask1])) / 2
 
     mask2 = (x >= 0) & (y >= 0)
-    result[mask2] = torch.log((erfc(x[mask2]) - erfc(y[mask2])) / 2)
+    result[mask2] = (erfc(x[mask2]) - erfc(y[mask2])) / 2
 
     mask3 = (x <= 0) & (y <= 0)
-    result[mask3] = torch.log((erfc(-y[mask3]) - erfc(-x[mask3])) / 2)
+    result[mask3] = (erfc(-y[mask3]) - erfc(-x[mask3])) / 2
 
     mask4 = ~(mask1 | mask2 | mask3)
-    result[mask4] = torch.log((erf(y[mask4]) - erf(x[mask4])) / 2)
+    result[mask4] = (erf(y[mask4]) - erf(x[mask4])) / 2
     
     return result
