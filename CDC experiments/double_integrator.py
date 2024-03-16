@@ -14,7 +14,7 @@ class DoubleIntegratorEnv(gym.Env):
 
         max_distance = np.inf
         max_velocity = np.inf
-        max_force = 100
+        max_force = 50
 
         self.observation_space = Box(
             low=np.array([-max_distance, -max_distance, -max_velocity, -max_velocity]),
