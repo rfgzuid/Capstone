@@ -25,7 +25,7 @@ class InfeasibilityError(Exception):
 class CBF:
     def __init__(self, env: Env, nndm: NNDM, policy: DQN | Actor,
                  alpha: list[float], delta: list[float],
-                 no_action_partitions: int = 4, no_noise_partitions=2, stochastic=False):
+                 no_action_partitions: int = 4, no_noise_partitions=2, stochastic=False, device='None'):
         self.env = env.env
         self.state_size = self.env.observation_space.shape[0]
         self.action_size = 1 if env.is_discrete else self.env.action_space.shape[0]
@@ -197,9 +197,9 @@ class CBF:
             action = cp.Variable(num_actions)
 
             v = action - nominal_action
-            # objective = cp.Minimize(cp.quad_form(v, torch.eye(2)))
+            objective = cp.Minimize(cp.quad_form(v, torch.eye(2)))
 
-            objective = cp.Minimize(cp.norm(action - nominal_action, 2))
+            # objective = cp.Minimize(cp.norm(action - nominal_action, 2))
 
             # Constraints
             action_lower_bound = action_partition.lower.reshape((-1,))
@@ -210,7 +210,7 @@ class CBF:
 
             # Solve the problem, using ECOS as the default solver for small scale QP
             problem = cp.Problem(objective, constraints)
-            problem.solve(solver='CLARABEL', verbose=False)
+            problem.solve(solver='OSQP', verbose=True)
 
             if problem.status is cp.UNBOUNDED:
                 print("something goes very wrong")
