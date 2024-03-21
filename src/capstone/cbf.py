@@ -228,8 +228,8 @@ class CBF:
         
     def create_noise_partitions(self):
             # Define the limits for partitioning
-            partitions_lower = [-7 * std for std in self.stds]
-            partitions_upper = [7 * std for std in self.stds]
+            partitions_lower = [-5 * std for std in self.stds]
+            partitions_upper = [5 * std for std in self.stds]
             # Create the partition slices for each dimension in h_ids
             partition_slices = []
             for dim_num_slices, dim_min, dim_max in zip([self.no_noise_partitions] * len(self.h_ids),
